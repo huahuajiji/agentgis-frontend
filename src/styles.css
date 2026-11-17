@@ -158,21 +158,11 @@ button:disabled {
   display: none;
 }
 
-.side-scroll.with-fixed-ai {
-  padding-bottom: 10px;
-}
-
-.fixed-ai-panel {
-  border-top: 1px solid var(--line);
-  background: var(--surface);
-  min-height: 220px;
-}
-
-.agent-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 10px;
+.side-empty {
+  margin: 6px 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .workspace {

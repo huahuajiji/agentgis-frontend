@@ -1,4 +1,4 @@
-export type NavSection = '地图' | '项目' | '数据' | 'AI' | '历史' | '设置';
+export type NavSection = '地图' | '项目' | '数据';
 export type MapMode = '浏览' | '编辑' | '分析';
 export type MapTool = '' | '选择' | '绘制' | '导入';
 export type MapDrawGeometry = '' | 'point' | 'line' | 'polygon';

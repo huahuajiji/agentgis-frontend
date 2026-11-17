@@ -11,7 +11,7 @@ const emit = defineEmits<{
   openAccount: [];
 }>();
 
-const topSections: NavSection[] = ['地图', '项目', '数据', 'AI', '历史', '设置'];
+const topSections: NavSection[] = ['地图', '项目', '数据'];
 </script>
 
 <template>

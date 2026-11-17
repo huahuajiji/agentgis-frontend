@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router';
 import AppLayout from './layouts/AppLayout.vue';
 import type { NavSection } from './types';
 
@@ -9,10 +9,7 @@ type NavRouteMeta = {
 const navRoutes = [
   { path: '/map', name: 'map', section: '地图' },
   { path: '/project', name: 'project', section: '项目' },
-  { path: '/data', name: 'data', section: '数据' },
-  { path: '/ai', name: 'ai', section: 'AI' },
-  { path: '/history', name: 'history', section: '历史' },
-  { path: '/settings', name: 'settings', section: '设置' }
+  { path: '/data', name: 'data', section: '数据' }
 ] satisfies Array<{ path: string; name: string; section: NavSection }>;
 
 const routes: RouteRecordRaw[] = [
@@ -26,6 +23,7 @@ const routes: RouteRecordRaw[] = [
 ];
 
 export const router = createRouter({
-  history: createWebHistory(),
+  // GitHub Pages / 静态托管刷新兼容：用 hash 模式，路径形如 /#/map
+  history: createWebHashHistory(),
   routes
 });

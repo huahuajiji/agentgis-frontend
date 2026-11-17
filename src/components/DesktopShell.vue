@@ -14,10 +14,7 @@ const inspectorCollapsed = ref(false);
 const sectionRoutes: Record<NavSection, string> = {
   地图: '/map',
   项目: '/project',
-  数据: '/data',
-  AI: '/ai',
-  历史: '/history',
-  设置: '/settings'
+  数据: '/data'
 };
 
 const activeNav = computed<NavSection>(() => {
