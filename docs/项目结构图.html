@@ -136,14 +136,12 @@
 
 <header class="page-head">
   <h1>AgentGIS V9.3 项目结构图</h1>
-  <p>截至 2026-11-17 · 已删除两个 MouseTool demo 之后的结构 · 状态按代码实况标注</p>
+  <p>截至 2026-11-18 · 前端收敛后（3 区导航 / 3 面板 / 2 页签）· 状态按代码实况标注</p>
 </header>
 
 <div class="legend">
   <span><i class="dot real"></i>真实现</span>
-  <span><i class="dot partial"></i>半成品</span>
-  <span><i class="dot placeholder"></i>占位（虚线框）</span>
-  <span><i class="dot removed"></i>本次已删</span>
+  <span><i class="dot removed"></i>已删除（收敛时）</span>
   <span><i class="dot state"></i>状态 / 计算层</span>
 </div>
 
@@ -159,20 +157,18 @@
 
 <!-- ============ 路由层 ============ -->
 <div class="band">
-  <p class="band-label">路由（history 模式，部署前须改 hash）</p>
+  <p class="band-label">路由（hash 模式）</p>
   <div class="group">
     <div class="row">
       <div class="box real" style="flex:1;min-width:220px"><b>src/App.vue</b><small>&lt;RouterView /&gt;</small></div>
       <div class="box real" style="flex:2;min-width:380px">
         <b>src/router.ts</b>
-        <small>6 条导航路由全部指向同一个 AppLayout，靠 meta.section 区分</small>
+        <small>createWebHashHistory · 3 条导航路由全部指向同一个 AppLayout，靠 meta.section 区分</small>
         <div class="subgrid">
-          <div class="mini real"><b>/map 地图</b></div>
-          <div class="mini real"><b>/project 项目</b></div>
-          <div class="mini real"><b>/data 数据</b></div>
-          <div class="mini placeholder"><b>/ai AI</b><small>区壳，无真内容</small></div>
-          <div class="mini placeholder"><b>/history 历史</b><small>区壳，无真内容</small></div>
-          <div class="mini placeholder"><b>/settings 设置</b><small>区壳，无真内容</small></div>
+          <div class="mini real"><b>/#/map 地图</b><small>默认入口</small></div>
+          <div class="mini real"><b>/#/project 项目</b></div>
+          <div class="mini real"><b>/#/data 数据</b></div>
+          <div class="mini removed"><b>/ai · /history · /settings</b><small>区壳，收敛时删除</small></div>
           <div class="mini removed"><b>/mousetool-vue-demo</b><small>822 行，已删</small></div>
           <div class="mini removed"><b>/mousetool-transition-demo</b><small>1452 行，已删</small></div>
         </div>
@@ -204,8 +200,8 @@
     <div class="box real">
       <b>DesktopLeftPane</b><small>76px 导航条 + 320px 侧栏</small>
       <div class="stack" style="margin-top:8px">
-        <div class="mini real"><b>AppNavRail</b><small>地图 / 项目 / 数据 / AI / 历史 / 设置 / 账户</small></div>
-        <div class="mini real"><b>WorkspaceSidebar</b><small>17 个面板按区配置，见下方面板清单</small></div>
+        <div class="mini real"><b>AppNavRail</b><small>地图 / 项目 / 数据 + 账户</small></div>
+        <div class="mini real"><b>WorkspaceSidebar</b><small>3 个真面板按区配置（项目区 2、数据区 1、地图区空态）</small></div>
         <div class="mini real"><b>AccountModal</b><small>BYOK 高德 Key 配置的真正入口</small></div>
       </div>
     </div>
@@ -228,12 +224,11 @@
 
     <!-- 右栏 -->
     <div class="box real">
-      <b>InspectorPanel</b><small>四个页签</small>
+      <b>InspectorPanel</b><small>两个页签</small>
       <div class="stack" style="margin-top:8px">
         <div class="mini real"><b>要素</b><small>LayerFeatureTree + FeaturePropertyTable</small></div>
         <div class="mini real"><b>操作</b><small>OperationHistoryPanel · 撤销/重做/提交历史</small></div>
-        <div class="mini placeholder"><b>参考</b><small>占位</small></div>
-        <div class="mini placeholder"><b>AI</b><small>占位</small></div>
+        <div class="mini removed"><b>参考 / AI</b><small>占位页签，收敛时删除</small></div>
       </div>
     </div>
   </div>
@@ -250,7 +245,7 @@
       <div class="subgrid">
         <div class="mini state"><b>activeDocument</b><small>draft / saved 二选一</small></div>
         <div class="mini state"><b>workingOperations + redoOperations</b><small>撤销/重做双栈</small></div>
-        <div class="mini state"><b>externalOperations</b><small>AI 审核管道（已通，缺上游）</small></div>
+        <div class="mini state"><b>externalOperations</b><small>外部操作审核管道（已通，未接 LLM）</small></div>
       </div>
     </div>
     <div class="box state" style="flex:1;min-width:240px">
@@ -284,7 +279,7 @@
     </div>
     <div class="box state" style="flex:1;min-width:240px">
       <b>Persistence</b>
-      <small>localStorage（换后端时替换这一层）· mapDocumentPersistence.ts</small>
+      <small>localStorage · mapDocumentPersistence.ts（阶段 3 换后端时替换这一层）</small>
     </div>
     <div class="box state" style="flex:1;min-width:220px">
       <b>外部依赖</b>
@@ -294,39 +289,31 @@
 </div>
 
 <!-- ============ 面板清单 ============ -->
-<h2 class="sec">左栏 17 个面板的实际状态</h2>
+<h2 class="sec">收敛后的面板 / 页签清单（全部为真实现）</h2>
 <table class="panels">
-  <thead><tr><th style="width:90px">导航区</th><th>面板</th><th style="width:90px">状态</th><th style="width:300px">说明</th></tr></thead>
+  <thead><tr><th style="width:110px">位置</th><th style="width:220px">面板 / 页签</th><th style="width:80px">状态</th><th>实现</th></tr></thead>
   <tbody>
-    <tr><td rowspan="2">地图</td><td>视图设置</td><td><span class="st placeholder">占位</span></td><td>虚线框 ×4</td></tr>
-    <tr><td>地图工具</td><td><span class="st placeholder">占位</span></td><td>虚线框 ×3</td></tr>
-    <tr><td rowspan="3">项目</td><td>项目列表</td><td><span class="st real">真实现</span></td><td class="mono">MapDocumentList.vue</td></tr>
+    <tr><td rowspan="2">左栏 · 项目区</td><td>项目列表</td><td><span class="st real">真实现</span></td><td class="mono">MapDocumentList.vue</td></tr>
     <tr><td>图片资源</td><td><span class="st real">真实现</span></td><td class="mono">LayerImageResourcesPanel.vue</td></tr>
-    <tr><td>版本</td><td><span class="st placeholder">占位</span></td><td>—</td></tr>
-    <tr><td rowspan="5">数据</td><td>查找外部数据</td><td><span class="st partial">半成品</span></td><td>表单完整（20 类 POI），"加载"按钮无响应</td></tr>
-    <tr><td>GeoJSON 导入 / 导出</td><td><span class="st real">真实现</span></td><td class="mono">GeoJsonTransferPanel.vue</td></tr>
-    <tr><td>数据源</td><td><span class="st placeholder">占位</span></td><td>—</td></tr>
-    <tr><td>引用数据</td><td><span class="st placeholder">占位</span></td><td>—</td></tr>
-    <tr><td>导入队列</td><td><span class="st placeholder">占位</span></td><td>—</td></tr>
-    <tr><td rowspan="3">AI</td><td>AI 对话</td><td><span class="st placeholder">占位</span></td><td>"运行"按钮无响应</td></tr>
-    <tr><td>执行预览</td><td><span class="st placeholder">占位</span></td><td>—</td></tr>
-    <tr><td>上下文</td><td><span class="st placeholder">占位</span></td><td>—</td></tr>
-    <tr><td rowspan="2">历史</td><td>执行记录</td><td><span class="st placeholder">占位</span></td><td>真历史在右栏"操作"页签</td></tr>
-    <tr><td>操作历史</td><td><span class="st placeholder">占位</span></td><td>同上</td></tr>
-    <tr><td rowspan="2">设置</td><td>接口配置</td><td><span class="st placeholder">占位</span></td><td>真配置在"账户"弹窗</td></tr>
-    <tr><td>偏好设置</td><td><span class="st placeholder">占位</span></td><td>—</td></tr>
+    <tr><td>左栏 · 数据区</td><td>GeoJSON 导入 / 导出</td><td><span class="st real">真实现</span></td><td class="mono">GeoJsonTransferPanel.vue</td></tr>
+    <tr><td>左栏 · 地图区</td><td>空态说明文案</td><td><span class="st real">真实现</span></td><td>「这个区暂时没有面板」</td></tr>
+    <tr><td rowspan="2">右栏检查器</td><td>要素</td><td><span class="st real">真实现</span></td><td class="mono">LayerFeatureTree + FeaturePropertyTable</td></tr>
+    <tr><td>操作</td><td><span class="st real">真实现</span></td><td class="mono">OperationHistoryPanel（撤销/重做/提交）</td></tr>
+    <tr><td rowspan="3">已删除</td><td>13 个占位面板</td><td><span class="st removed">已删</span></td><td>视图设置、地图工具、版本、数据源、引用数据、导入队列、AI 对话、执行预览、上下文、执行记录、操作历史（左栏）、接口配置、偏好设置</td></tr>
+    <tr><td>查找外部数据（半成品）</td><td><span class="st removed">已删</span></td><td>表单完整但按钮无响应；连同 50 行 POI 常量一起移除</td></tr>
+    <tr><td>2 个占位页签</td><td><span class="st removed">已删</span></td><td>参考图层、AI 检查</td></tr>
   </tbody>
 </table>
 
 <div class="note">
-  <b>本次删除（2026-11-17）：</b>
-  <code>src/demos/</code> 整个目录（MouseToolVueDemo 822 行 + MouseToolTransitionDemo 1452 行）、
-  <code>router.ts</code> 中两个对应路由与 import、README/USAGE 中的 demo 章节。
-  构建验证：模块数 214 → 208，JS 333.7 kB → 304.7 kB，CSS 37.0 kB → 30.1 kB，<code>vue-tsc</code> 无错误。
-  访问旧 demo 地址现在只会得到空挂载点。
+  <b>收敛记录（2026-11-17）：</b>
+  删除两个 MouseTool demo（2274 行）与占位面板后，导航 6 区 → 3 区，左栏 17 面板 → 3，检查器 4 页签 → 2，路由改 hash。
+  构建：214 → 206 模块，JS 333.7 → 301.2 kB（gzip 106.4 → 95.8），CSS 37.0 → 30.0 kB，<code>vue-tsc</code> 零错误；
+  运行时无头浏览器遍历全部路由与控件，控制台错误 0，页面占位块 0。
+  详见 <code>docs/阶段总结-01-前端收敛.md</code>。
 </div>
 
-<footer>AgentGIS V9.3 Vue Layout · 结构图生成于 2026-11-17</footer>
+<footer>AgentGIS V9.3 Vue Layout · 结构图更新于 2026-11-18</footer>
 </div>
 </body>
 </html>

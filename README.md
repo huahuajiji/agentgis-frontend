@@ -1,31 +1,41 @@
 # AgentGIS V9.3 Vue Layout
 
-AgentGIS V9.3 Vue Layout 是一个基于 Vue 3 的 GIS 地图文档工作台原型。它重点探索一件事：地图画布、图层/文档管理、要素检查、操作历史、AI/外部操作审核，怎样被组织进一个足够清晰、可继续扩展的产品界面里。
+AgentGIS 是一个基于 Vue 3 的 GIS 地图文档工作台。它探索一件事：地图画布、图层/文档管理、要素检查、操作历史、人机协同审核，怎样被组织进一个足够清晰、可继续扩展的产品界面里。
 
-这个仓库只包含 V9.3 探索里的 vue-layout 项目。它是纯前端原型：没有后端服务、没有托管数据库，也不会内置任何地图 API Key。
+这个仓库是纯前端应用：没有内置任何地图 API Key，底图使用 BYOK（用户自带高德 Key）。后端服务在路线图中（见「路线图」一节），当前数据保存在浏览器 localStorage。
+
+## 当前状态（2026-11-18）
+
+项目正在按「收缩到一条完整业务线」的方向复活：**建文档 → 建图层 → 画要素 → 编辑属性 → 保存 → 重新打开还在**，加上后端空间分析。
+
+前端已完成收敛：
+
+- 导航三个区：**地图 / 项目 / 数据**（另有账户弹窗，是 BYOK 配置入口）
+- 左侧工作区只有三个真实面板：项目列表、图片资源、GeoJSON 导入 / 导出
+- 右侧检查器两个页签：要素（图层树 + 属性）、操作（撤销/重做/提交历史）
+- 所有占位面板与探索性 demo 已删除，界面没有无响应的按钮
+- 路由使用 hash 模式（静态托管刷新兼容）
 
 ## 架构亮点
 
-项目最核心的设计决策是**操作溯源（Operation-based Architecture）**：每次对地图文档的修改——创建图层、添加要素、重命名、删除、导入 GeoJSON——都会生成一个带类型的 `MapOperation` 对象。这带来了三个关键能力：
+项目最核心的设计是**操作溯源（Operation-based Architecture）**：每次对地图文档的修改——创建图层、添加要素、重命名、删除、导入 GeoJSON——都会生成一个带类型的 `MapOperation` 对象。这带来了三个关键能力：
 
 - **完整撤销/重做**：`workingOperations` 与 `redoOperations` 双栈，每一步操作都可回退、可重放。
 - **提交历史**：操作可归组为 `LocalMapCommit`，形成可追溯的编辑记录。
-- **外部操作追踪**：AI 或外部系统的操作作为 `ExternalMapOperationRecord` 进入系统，可自动与内部操作历史进行匹配审计。
+- **外部操作追踪**：AI 或外部系统的操作作为 `ExternalMapOperationRecord` 进入系统，可与内部操作历史匹配审计（管道已就绪，尚未接入 LLM）。
 
 这些 `MapOperation` 通过 Zod discriminatedUnion 在运行时校验，涵盖 7 种操作类型（layer.create、layer.update、layer.delete、feature.create、feature.update、feature.delete、geojson.import），类型安全保障贯穿整个数据流。
 
-后续接入后端后，这些结构化的 `MapOperation` 可由 AI 直接生成，形成人机协同的地图编辑工作流——AI 负责产出操作序列，用户负责审核、调整与确认。
-
 ## 包含内容
 
-- Vue 3 + TypeScript + Vite 应用骨架。
-- 桌面端指挥台布局：地图工作区、左侧文档/图层面板、右侧检查器、账户/设置弹窗。
-- 移动端工作台：地图、项目、数据、我的四个 tab，覆盖主要移动工作流。
+- Vue 3.5 + TypeScript 5.7 + Vite 6 应用骨架。
+- 桌面端工作台：垂直导航 + 可折叠侧栏 + 地图工作区 + 检查器 + 账户弹窗。
+- 移动端工作台：地图、项目、数据、我的四个 tab（与桌面端共用同一套状态）。
 - Pinia 本地状态：地图文档状态、账户设置、BYOK 配置。
 - 地图文档模型：图层、要素、已保存地图、草稿地图、本地提交、撤销/重做、外部操作记录。
-- GeoJSON 导入/导出能力。
-- 可选的高德地图底图集成，使用用户自己提供的 JS API Key 和 Security Code。
-- MouseTool 绘制/编辑 demo，用于验证高德地图绘制流程。
+- GeoJSON 导入/导出。
+- 可选的高德地图底图集成（BYOK：用户自己的 JS API Key 和 Security Code）。
+- 点/线/面绘制与几何编辑（依赖高德 Key）。
 
 ## 快速开始
 
@@ -34,7 +44,7 @@ npm install
 npm run dev
 ```
 
-打开 Vite 输出的本地地址即可。默认入口会跳转到 `/map`。
+打开 Vite 输出的本地地址。默认入口跳到 `/#/map`。
 
 构建检查：
 
@@ -42,55 +52,87 @@ npm run dev
 npm run build
 ```
 
-这个项目已经用全新 clone 流程验证过：`npm install` 和 `npm run build` 可以通过。
+构建命令先执行 `vue-tsc --noEmit` 做类型检查，再执行 Vite 构建。
 
 ## 地图 Key 配置
 
-仓库不包含任何地图 API Key。要加载高德底图，需要在应用里配置：
+仓库不包含任何地图 API Key。要加载高德底图：
 
-1. 打开账户/设置弹窗。
+1. 点击左下角「账户」打开配置弹窗。
 2. 开启 BYOK。
 3. 填写高德 JS API Key 和 Security Code。
-4. 保存设置。
+4. 保存。
 
-当前原型会把这些配置保存在浏览器 localStorage。这适合原型验证，不是生产环境的凭据管理方案。
+配置保存在浏览器 localStorage（`agentgis:v9_3:settings`）。这是原型阶段的方案，不是生产级凭据管理。
 
 ## 路由
 
-- `/map`：主地图工作区。
-- `/project`：项目区壳。
-- `/data`：数据区壳。
-- `/ai`：AI 区壳。
-- `/history`：历史区壳。
-- `/settings`：设置区壳。
+hash 模式，路径形如 `/#/map`：
 
-## 移动端体验
+- `/#/map`：地图工作区（默认）
+- `/#/project`：项目区（地图文档列表、图片资源）
+- `/#/data`：数据区（GeoJSON 导入 / 导出）
+- `/`：重定向到 `/#/map`
 
-移动端现在不是占位壳，而是接入了同一套地图文档工作流：
+## 移动端
 
-- **地图**：实时地图区域、当前文档摘要、保存动作、地图模式选择、绘制/编辑控件。
-- **项目**：地图列表和图层图片资源。
-- **数据**：正式图层、参考图层、GeoJSON 导入导出、操作历史。
-- **我的**：当前地图摘要和账户/BYOK 设置。
+视口宽度 ≤ 1039px 时切换为移动工作台，四个 tab：
+
+- **地图**：实时地图、当前文档摘要、保存、模式/工具控制、绘制/编辑。
+- **项目**：已保存地图列表、图片资源。
+- **数据**：图层、GeoJSON、操作历史。
+- **我的**：当前地图统计和账户/BYOK 设置入口。
+
+移动端与桌面端共用同一套文档状态与地图集成。绘制与几何编辑需要选中正式图层并配置有效的高德凭据。
+
+## 目录结构（简）
+
+```
+src/
+├── components/          桌面工作台、检查器、地图组件、面板
+│   ├── mobile/          移动端 shell 与底部导航
+│   └── shared/          通用组件（对话框、图层树、操作历史…）
+├── layouts/AppLayout.vue    同时挂载桌面与移动 shell
+├── shared/
+│   ├── mapDocument/     文档模型的纯函数模块（14 个）
+│   ├── amap/            高德集成（加载、绘制会话、编辑会话）
+│   └── map/             要素适配器、几何编辑目标
+├── schemas/mapDocumentSchema.ts   Zod 单一真相源
+├── stores/              Pinia：mapDocumentStore、settingsStore
+├── router.ts            hash 路由
+└── styles.css           全局样式（CSS 变量 + class 组织）
+```
 
 ## 文档
 
-- [使用说明](./docs/usage.md)
-- [架构说明](./docs/architecture.md)
-- [项目评价](./docs/evaluation.md)
+- [阶段总结 01 - 前端收敛](./docs/阶段总结-01-前端收敛.md)：本轮收敛了什么、数字对比、验证记录
+- [项目结构图](./docs/项目结构图.html)：可视化结构（浏览器打开）
+- [使用说明](./docs/USAGE.md)
+- [架构说明](./docs/ARCHITECTURE.md)
+- [项目评价](./docs/PROJECT_REVIEW.md)
+- [产品背景文档](./PROJECT-OVERVIEW.md)：产品定位、愿景与路线（含历史版本说明）
 
-## 当前状态
+## 路线图
 
-这是一个原型，不是生产级 GIS 平台。它比较强的部分是交互模型、地图文档状态设计和本地编辑工作流。主要缺口是后端持久化、登录鉴权、自动化测试、部署配置和生产级凭据管理。
+| 阶段 | 内容 | 状态 |
+|---|---|---|
+| 1 | 前端收敛（删占位、三区导航、hash 路由） | ✅ 2026-11-17 |
+| 2 | Vitest 单测：撤销重做、操作压缩、GeoJSON 收发 | ⏳ 下一步 |
+| 3 | FastAPI 后端：文档持久化 + 空间分析（buffer / overlay） | 计划 |
+| 4 | 部署：前端静态托管 + 后端容器 | 计划 |
+| 5 | 演示数据与作品集截图 | 计划 |
+| 6 | （可选）自然语言 → MapOperation 的 AI 接入 | 计划 |
 
-后续规划中，后端的核心职责之一是基于 AI 生成结构化的 `MapOperation` 序列，前端负责接收、校验、应用与呈现，形成「AI 提议、人类确认」的协同编辑模式。
+## 当前限制
+
+- 仅 localStorage 持久化（后端接入后替换）。
+- 无自动化测试（阶段 2 补）。
+- 高德底图需要用户自己的 Key。
+- 无 LICENSE（公开部署前补充）。
 
 ## 技术栈
 
-- Vue 3.5
-- TypeScript 5.7
-- Vite 6
-- Pinia 3
-- Vue Router 4
+- Vue 3.5 · TypeScript 5.7 · Vite 6
+- Pinia 3 · Vue Router 4（hash）
 - Zod 4
 - @amap/amap-jsapi-loader
