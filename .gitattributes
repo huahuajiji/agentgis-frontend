@@ -1,0 +1,20 @@
+# 统一行尾：仓库里一律存 LF，检出时由 git 按平台自动处理
+* text=auto eol=lf
+
+# 明确二进制文件，避免 git 尝试做行尾转换
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# 这些扩展名按文本处理（默认 text=auto 有时会漏判）
+*.vue text
+*.ts text
+*.json text
+*.css text
+*.html text
+*.md text
