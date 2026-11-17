@@ -6,7 +6,6 @@ import InspectorSearch from './InspectorSearch.vue';
 import LayerCreateDialog from './shared/LayerCreateDialog.vue';
 import LayerFeatureTree from './shared/LayerFeatureTree.vue';
 import OperationHistoryPanel from './shared/OperationHistoryPanel.vue';
-import PlaceholderBlock from './shared/PlaceholderBlock.vue';
 
 const mode = defineModel<InspectorMode>('mode', { required: true });
 
@@ -19,7 +18,8 @@ const sortingLayers = ref(false);
 const createLayerDialogOpen = ref(false);
 const mapDocumentStore = useMapDocumentStore();
 
-const activeLayerRole = computed<LayerRole>(() => (activeTab.value.id === '参考' ? 'reference' : 'work'));
+// 正式图层固定：V1 收缩后不再提供参考图层页签
+const activeLayerRole: LayerRole = 'work';
 
 function openCreateLayerDialog() {
   if (activeTab.value.content !== 'layer-tree') {
@@ -32,7 +32,7 @@ function openCreateLayerDialog() {
 function createLayer(input: { name: string; geometryType: LayerGeometryType }) {
   mapDocumentStore.createLayer({
     name: input.name,
-    role: activeLayerRole.value,
+    role: activeLayerRole,
     geometryType: input.geometryType
   });
 }
@@ -79,16 +79,14 @@ function createLayer(input: { name: string; geometryType: LayerGeometryType }) {
             排序
           </button>
           <span v-else-if="activeTab.content === 'operation-history'">本地记录</span>
-          <span v-else>空组件</span>
         </div>
         <div class="panel-body">
           <LayerFeatureTree
             v-if="activeTab.content === 'layer-tree'"
-            :variant="activeTab.id === '参考' ? 'reference' : 'work'"
+            :variant="activeLayerRole"
             :sorting="sortingLayers"
           />
           <OperationHistoryPanel v-else-if="activeTab.content === 'operation-history'" />
-          <PlaceholderBlock v-else kind="block" />
         </div>
       </div>
     </section>

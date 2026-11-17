@@ -5,8 +5,6 @@ export type MapDrawGeometry = '' | 'point' | 'line' | 'polygon';
 export type MapAction = '' | '定位' | '放大' | '缩小';
 export const INSPECTOR_TABS = [
   { id: '要素', title: '要素属性', content: 'layer-tree', layerCount: 10, featureRows: 3 },
-  { id: '参考', title: '参考图层', content: 'layer-tree', layerCount: 8, featureRows: 2 },
-  { id: 'AI', title: 'AI 检查', content: 'placeholder' },
   { id: '操作', title: '执行记录', content: 'operation-history' }
 ] as const;
 
