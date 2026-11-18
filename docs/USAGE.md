@@ -24,6 +24,20 @@ npm run build
 
 先执行 `vue-tsc --noEmit` 做 TypeScript / Vue 类型检查，再执行 Vite 构建。
 
+## 运行测试
+
+```powershell
+npm run test
+```
+
+使用 Vitest 运行 `src/shared/mapDocument/__tests__/` 下的单元测试（撤销/重做、操作压缩、GeoJSON 收发）。
+
+```powershell
+npm run typecheck:test
+```
+
+对测试文件单独做类型检查。测试文件不在主 `tsconfig.json` 的检查范围内（应用代码保持无 Node 类型依赖），由 `tsconfig.test.json` 覆盖。
+
 ## 预览生产构建
 
 ```powershell

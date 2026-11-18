@@ -54,6 +54,15 @@ npm run build
 
 构建命令先执行 `vue-tsc --noEmit` 做类型检查，再执行 Vite 构建。
 
+单元测试（Vitest）：
+
+```bash
+npm run test            # 运行全部测试
+npm run typecheck:test  # 对测试文件做类型检查
+```
+
+测试位于 `src/shared/mapDocument/__tests__/`，覆盖撤销/重做、操作压缩、GeoJSON 收发三个核心纯函数模块。
+
 ## 地图 Key 配置
 
 仓库不包含任何地图 API Key。要加载高德底图：
@@ -117,7 +126,7 @@ src/
 | 阶段 | 内容 | 状态 |
 |---|---|---|
 | 1 | 前端收敛（删占位、三区导航、hash 路由） | ✅ 2026-11-17 |
-| 2 | Vitest 单测：撤销重做、操作压缩、GeoJSON 收发 | ⏳ 下一步 |
+| 2 | Vitest 单测：撤销重做、操作压缩、GeoJSON 收发 | ✅ 2026-11-18 |
 | 3 | FastAPI 后端：文档持久化 + 空间分析（buffer / overlay） | 计划 |
 | 4 | 部署：前端静态托管 + 后端容器 | 计划 |
 | 5 | 演示数据与作品集截图 | 计划 |
@@ -126,7 +135,7 @@ src/
 ## 当前限制
 
 - 仅 localStorage 持久化（后端接入后替换）。
-- 无自动化测试（阶段 2 补）。
+- 自动化测试目前只覆盖 `shared/mapDocument/` 的三个核心模块（46 个用例），组件层尚未测试。
 - 高德底图需要用户自己的 Key。
 - 无 LICENSE（公开部署前补充）。
 
