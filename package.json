@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vue-tsc --noEmit && vite build",
+    "test": "vitest run",
+    "typecheck:test": "vue-tsc --noEmit -p tsconfig.test.json",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
@@ -19,6 +21,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/geojson": "^7946.0.16"
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^26.6.6",
+    "vitest": "^3.2.7"
   }
 }
