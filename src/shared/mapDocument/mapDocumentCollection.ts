@@ -52,9 +52,8 @@ export function createEmptyEditState(): MapDocumentEditState {
     remoteRevisionId: null,
     workingOperations: [],
     redoOperations: [],
-    externalOperations: [],
-    commitsById: {},
-    headCommitId: null
+    commitPool: [],
+    externalOperations: []
   });
 }
 

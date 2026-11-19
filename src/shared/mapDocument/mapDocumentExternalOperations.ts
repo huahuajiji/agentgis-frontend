@@ -51,12 +51,12 @@ export function matchExternalOperationToInternalHistory(
 export function collectInternalOperationHistory(edit: {
   workingOperations: MapOperation[];
   redoOperations: MapOperation[];
-  commitsById: Record<string, { operations: MapOperation[] }>;
+  commitPool: MapOperation[];
 }) {
   return [
     ...edit.workingOperations,
     ...edit.redoOperations,
-    ...Object.values(edit.commitsById).flatMap((commit) => commit.operations)
+    ...edit.commitPool
   ];
 }
 

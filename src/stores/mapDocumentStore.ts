@@ -9,7 +9,6 @@ import {
   type ActiveDocumentRef,
   type DraftMapDocument,
   type ExternalMapOperationRecord,
-  type LocalMapCommit,
   type MapDocumentState,
   type MapFeature,
   type MapLayer,
@@ -50,7 +49,6 @@ import {
 } from '../shared/mapDocument/mapDocumentCollection';
 import { DRAFT_DOCUMENT_ID } from '../shared/mapDocument/mapDocumentConstants';
 import {
-  validateLocalMapCommit,
   validateExternalMapOperationRecord,
   validateMapDocumentEditState,
   validateMapOperation
@@ -94,7 +92,6 @@ export type {
   LayerImageResource,
   LayerRole,
   LngLat,
-  LocalMapCommit,
   MapBounds,
   MapDocumentEditState,
   MapDocumentState,
@@ -112,10 +109,6 @@ export { createDraftDocument } from '../shared/mapDocument/mapDocumentCollection
 type SaveDraftInput = {
   name: string;
   workspaceId?: string;
-};
-
-type CommitWorkingOperationsInput = {
-  message?: string;
 };
 
 type AddExternalOperationInput = {
@@ -633,8 +626,13 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
     return exportGeoJsonFromDocument(activeDocument.value, options);
   }
 
-  function commitWorkingOperations(input: CommitWorkingOperationsInput = {}): LocalMapCommit | null {
-    let createdCommit: LocalMapCommit | null = null;
+  /**
+   * 把未提交操作压缩后放入 commit 池（待同步队列）。
+   * 池子不建历史链：它的职责是标记"有哪些改动还没同步到后端"。
+   * 返回入池的操作数（0 表示没有可提交内容或全部湮灭）。
+   */
+  function commitWorkingOperations(): number {
+    let movedCount = 0;
     updateActiveDocument((document) => {
       const operations = document.edit.workingOperations;
       if (!operations.length) {
@@ -652,33 +650,40 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
         };
       }
 
-      const commit = validateLocalMapCommit({
-        id: createId('commit'),
-        baseRevisionId: document.edit.baseRevisionId,
-        parentCommitId: document.edit.headCommitId,
-        operations: compactedOperations,
-        createdAt: nowIso(),
-        message: input.message?.trim() || `本地提交 · ${compactedOperations.length} 个操作`,
-        syncStatus: 'local'
-      });
-      createdCommit = commit;
-
+      movedCount = compactedOperations.length;
       return {
         ...document,
         edit: validateMapDocumentEditState({
           ...document.edit,
           workingOperations: [],
           redoOperations: [],
-          commitsById: {
-            ...document.edit.commitsById,
-            [commit.id]: commit
-          },
-          headCommitId: commit.id
+          commitPool: [...document.edit.commitPool, ...compactedOperations]
         })
       };
     });
 
-    return createdCommit;
+    return movedCount;
+  }
+
+  /**
+   * 清空 commit 池。上传成功后由同步层调用；不生成操作、不触发"文档已变更"
+   * 之外的额外语义（同步元数据，不是业务变更）。
+   */
+  function clearCommitPool(): number {
+    const clearedCount = activeDocument.value.edit.commitPool.length;
+    if (!clearedCount) {
+      return 0;
+    }
+
+    updateActiveDocument((document) => ({
+      ...document,
+      edit: validateMapDocumentEditState({
+        ...document.edit,
+        commitPool: []
+      })
+    }));
+
+    return clearedCount;
   }
 
   function addExternalOperation(input: AddExternalOperationInput): ExternalMapOperationRecord | null {
@@ -1042,6 +1047,7 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
     undoWorkingOperation,
     redoWorkingOperation,
     commitWorkingOperations,
+    clearCommitPool,
     addExternalOperation,
     applyExternalOperation,
     matchExternalOperation,

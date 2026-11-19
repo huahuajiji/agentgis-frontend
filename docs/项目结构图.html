@@ -131,6 +131,11 @@
   }
   .note b { color: var(--text); }
   footer { margin-top: 44px; font-size: 11.5px; color: #a29a88; text-align: center; }
+
+  .arch-note { max-width: 960px; margin: 8px 0 16px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .arch-note .keep { color: #2e7d32; }
+  .arch-note .cut { color: #c62828; }
+  pre.mermaid { background: #fff; border: 1px solid var(--line, #e4ded0); border-radius: 10px; padding: 16px; overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -230,7 +235,7 @@
       <b>InspectorPanel</b><small>两个页签</small>
       <div class="stack" style="margin-top:8px">
         <div class="mini real"><b>要素</b><small>LayerFeatureTree + FeaturePropertyTable</small></div>
-        <div class="mini real"><b>操作</b><small>OperationHistoryPanel · 撤销/重做/提交历史</small></div>
+        <div class="mini real"><b>操作</b><small>OperationHistoryPanel · 撤销/重做/待同步池</small></div>
         <div class="mini removed"><b>参考 / AI</b><small>占位页签，收敛时删除</small></div>
       </div>
     </div>
@@ -320,7 +325,121 @@
   详见工作区根目录的 <code>阶段总结-01-前端收敛.md</code>。
 </div>
 
-<footer>AgentGIS V9.3 Vue Layout · 结构图更新于 2026-11-18</footer>
+
+<!-- ============ 前端 × 旧后端 关系图（Mermaid，需联网渲染） ============ -->
+<h2 class="sec">前端 × 旧后端（rag-agent v0.7）关系图</h2>
+<p class="arch-note">上半部为现役前端 agentgis-frontend 的完整模块树；下半部为旧后端 rag-agent v0.7 的实测结构——<b class="keep">绿色</b>为可借鉴部分（CRUD 形状 / amap 适配器），<b class="cut">红色</b>为明确砍掉的 LangGraph、记忆、RAG 链路。</p>
+<pre class="mermaid">
+flowchart TB
+    subgraph FE["前端 agentgis-frontend（Vue 3 + TS + Vite，当前开发中）"]
+        direction TB
+        A1["index.html → main.ts → router.ts（hash 路由）"]
+        A2["layouts/AppLayout.vue（挂桌面/移动两套 shell）"]
+        D1["components/shell/DesktopShell 桌面三栏"]
+        M1["components/mobile/MobileShell 四 tab"]
+        A1 --> A2
+        A2 --> D1
+        A2 --> M1
+
+        subgraph SHELL["shell/"]
+            S1["AppNavRail · 地图/项目/数据 三区导航"]
+            S2["DesktopLeftPane → WorkspaceSidebar"]
+            S3["DesktopMainArea"]
+            S4["WorkspaceHeadActions · 折叠左/右栏"]
+        end
+        D1 --> SHELL
+
+        subgraph MAP["map/"]
+            P1["AmapBaseMap.vue · 画布容器（编排 shared/amap）"]
+            P2["MapCommandBar · 模式/工具 · 绘制坞 · 视图控件"]
+        end
+        S3 --> MAP
+
+        INS["inspector/ InspectorPanel · 要素 / 操作 两页签"]
+        S3 --> INS
+        PAN["panels/ 项目列表 · 图片资源 · GeoJSON 收发"]
+        S2 --> PAN
+        DIA["dialogs/ AccountModal（BYOK 高德 Key）· DraftMapSaveDialog"]
+        D1 --> DIA
+
+        subgraph CORE["状态与计算层（项目真正资产）"]
+            ST1["stores/mapDocumentStore · 只做编排"]
+            ST2["schemas/mapDocumentSchema · Zod 单一真相源（7 种 MapOperation）"]
+            ST3["shared/mapDocument ×14 · 撤销重做 / 操作压缩 / GeoJSON / 持久化 / 迁移 / 外部操作"]
+            ST4["shared/amap ×4 · loader / 绘制会话 / 编辑会话"]
+            ST5["shared/map ×2 · 要素适配器 / 几何编辑目标"]
+            T1["__tests__ · Vitest 46 例（阶段 2）"]
+        end
+        MAP --> ST4
+        MAP --> ST5
+        INS --> ST1
+        PAN --> ST1
+        ST1 --> ST3
+        ST3 --> ST2
+        ST3 --> T1
+        LS["localStorage · 当前唯一持久化（阶段 3 换后端）"]
+        ST3 --> LS
+    end
+
+    subgraph BE["旧后端 rag-agent v0.7（FastAPI，历史参考，不复活）"]
+        direction TB
+        B0["app/main.py · CORS · 统一挂 /api"]
+        B1["api/project_api · /projects 五端点 CRUD"]
+        B2["api/map_api · /map/edit · /map/analyze-chat · /map/import-amap · /map/reference-amap"]
+        B3["api/agent_api · /agent/run"]
+        B4["api/chat_api + /api/retrieve（RAG 检索）"]
+        B0 --> B1
+        B0 --> B2
+        B0 --> B3
+        B0 --> B4
+
+        SV1["services/edit_map_service · llm_map_editor"]
+        SV2["services/agent_graph · LangGraph 状态图"]
+        SV3["memory_manager / extractor / policy · 记忆系统"]
+        SV4["geo_retrieval / agent_intent · 检索与意图"]
+        SV5["RAG toolkit + Qdrant 向量库 + BGE 本地模型"]
+        B2 --> SV1
+        B3 --> SV2
+        SV1 --> SV3
+        SV2 --> SV3
+        SV2 --> SV4
+        B4 --> SV5
+
+        AD1["adapters/json_project_store · 项目存 JSON 文件"]
+        AD2["adapters/amap_adapter · 高德 POI / 地理编码（可借鉴）"]
+        AD3["adapters/llm_client · BYOK LLM 客户端"]
+        SV1 --> AD1
+        SV1 --> AD2
+        SV1 --> AD3
+        B1 --> AD1
+
+        DOM["domain/ + schemas/ · 自有 map_document 模型（title + list 结构，与现前端 Zod 模型不兼容）"]
+        AD1 --> DOM
+        QD[("data/documents/*.json + qdrant_data/ 本地向量库")]
+        AD1 --> QD
+        SV5 --> QD
+    end
+
+    JUDGE["裁决记录：✅ 借鉴 project_api 的 CRUD 形状 / 列表-详情分离 / amap_adapter（阶段 5 演示数据）&lt;br/&gt;❌ 不引入 LangGraph · 记忆 · RAG+Qdrant · eval/trace · 自有文档模型"]
+    BE ~~~ JUDGE
+
+    FE -. "历史链路（多未接通）：/api/projects 部分调用 · 查找外部数据面板 meta 指向 /api/map/reference-amap（死按钮）· ExternalOperationRecord 管道为 AI/后端操作预留" .-> BE
+    AD1 -. "数据模型不兼容，不迁移" .-> ST2
+
+    classDef cut fill:#fbe9e7,stroke:#c62828,color:#5d1a12;
+    classDef keep fill:#e8f5e9,stroke:#2e7d32,color:#1b4d22;
+    classDef asset fill:#e3f2fd,stroke:#1565c0,color:#0d3c61;
+    class SV2,SV3,SV5,B3,B4 cut;
+    class AD2 keep;
+    class ST2,ST3,T1 asset;
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { htmlLabels: true, curve: 'basis' } });
+</script>
+
+<footer>AgentGIS V9.3 Vue Layout · 结构图更新于 2026-11-19</footer>
 </div>
 </body>
 </html>

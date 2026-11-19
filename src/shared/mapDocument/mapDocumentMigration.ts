@@ -100,12 +100,61 @@ function pushNotice(notices: MigrationNotice[], scope: string, message: string) 
   notices.push(createMigrationNotice(scope, message));
 }
 
-function normalizeEditState(value: unknown) {
+function normalizeEditState(value: unknown, scope: string, notices: MigrationNotice[]) {
   try {
-    return validateMapDocumentEditState(value);
+    return validateMapDocumentEditState(flattenLegacyCommits(value, scope, notices));
   } catch {
     return createEmptyEditState();
   }
+}
+
+/**
+ * 旧模型（commitsById + headCommitId 链）→ 新模型（commitPool）。
+ * 链上的操作按时间顺序拍平进池，保证历史操作不丢；
+ * redoOperations 保留原样（旧模型里它们与 commit 正交）。
+ */
+export function flattenLegacyCommitsForTest(
+  value: unknown,
+  scope = 'test',
+  notices: MigrationNotice[] = []
+): unknown {
+  return flattenLegacyCommits(value, scope, notices);
+}
+
+function flattenLegacyCommits(
+  value: unknown,
+  scope: string,
+  notices: MigrationNotice[]
+): unknown {
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  const { commitsById, headCommitId, ...rest } = value;
+  if (!isRecord(commitsById) || Object.keys(commitsById).length === 0) {
+    return rest;
+  }
+
+  const commits = Object.values(commitsById)
+    .filter((commit): commit is Record<string, unknown> => isRecord(commit))
+    .filter((commit) => Array.isArray(commit.operations))
+    .sort((first, second) => (
+      String(first.createdAt ?? '').localeCompare(String(second.createdAt ?? ''))
+    ));
+  const flattenedOperations = commits.flatMap((commit) => commit.operations as unknown[]);
+
+  if (flattenedOperations.length) {
+    pushNotice(
+      notices,
+      scope,
+      `${commits.length} 条旧提交（${flattenedOperations.length} 个操作）已迁移进 commit 池`
+    );
+  }
+
+  return {
+    ...rest,
+    commitPool: [...(Array.isArray(rest.commitPool) ? rest.commitPool : []), ...flattenedOperations]
+  };
 }
 
 function normalizeDraftDocument(
@@ -123,7 +172,7 @@ function normalizeDraftDocument(
     ...normalizeLayerFeatureCollections(document, 'draftDocument', notices),
     selectedLayerId: typeof document.selectedLayerId === 'string' ? document.selectedLayerId : null,
     selectedFeatureId: typeof document.selectedFeatureId === 'string' ? document.selectedFeatureId : null,
-    edit: normalizeEditState(document.edit)
+    edit: normalizeEditState(document.edit, 'draftDocument', notices)
   };
 
   const result = DraftMapDocumentSchema.safeParse(candidate);
@@ -169,7 +218,7 @@ function normalizeSavedDocuments(
       ...normalizeLayerFeatureCollections(document, scope, notices),
       selectedLayerId: typeof document.selectedLayerId === 'string' ? document.selectedLayerId : null,
       selectedFeatureId: typeof document.selectedFeatureId === 'string' ? document.selectedFeatureId : null,
-      edit: normalizeEditState(document.edit)
+      edit: normalizeEditState(document.edit, scope, notices)
     };
 
     if (!document.workspaceId) {

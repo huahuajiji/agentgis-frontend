@@ -139,16 +139,6 @@ export const MapOperationSchema = z.discriminatedUnion('type', [
   })
 ]);
 
-export const LocalMapCommitSchema = z.object({
-  id: z.string().min(1),
-  baseRevisionId: z.string().min(1).nullable(),
-  parentCommitId: z.string().min(1).nullable(),
-  operations: z.array(MapOperationSchema),
-  createdAt: z.string().min(1),
-  message: z.string().optional(),
-  syncStatus: z.enum(['local', 'syncing', 'synced', 'conflict']).default('local')
-});
-
 export const ExternalOperationStatusSchema = z.enum(['pending', 'applied', 'mismatch', 'failed']);
 
 export const ExternalMapOperationRecordSchema = z.preprocess((value) => {
@@ -192,9 +182,8 @@ export const MapDocumentEditStateSchema = z.object({
   remoteRevisionId: z.string().min(1).nullable(),
   workingOperations: z.array(MapOperationSchema),
   redoOperations: z.array(MapOperationSchema).default([]),
-  externalOperations: z.array(ExternalMapOperationRecordSchema).default([]),
-  commitsById: z.record(z.string(), LocalMapCommitSchema),
-  headCommitId: z.string().min(1).nullable()
+  commitPool: z.array(MapOperationSchema).default([]),
+  externalOperations: z.array(ExternalMapOperationRecordSchema).default([])
 });
 
 const MapDocumentBaseSchema = z.object({
@@ -250,7 +239,6 @@ export type MapLayer = z.infer<typeof MapLayerSchema>;
 export type MapFeature = z.infer<typeof MapFeatureSchema>;
 export type MapOperationSource = z.infer<typeof MapOperationSourceSchema>;
 export type MapOperation = z.infer<typeof MapOperationSchema>;
-export type LocalMapCommit = z.infer<typeof LocalMapCommitSchema>;
 export type ExternalOperationStatus = z.infer<typeof ExternalOperationStatusSchema>;
 export type ExternalMapOperationRecord = z.infer<typeof ExternalMapOperationRecordSchema>;
 export type MapDocumentEditState = z.infer<typeof MapDocumentEditStateSchema>;

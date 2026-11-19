@@ -1,11 +1,10 @@
 import type {
-  LocalMapCommit,
   MapFeature,
   MapLayer,
   MapOperation
 } from '../../schemas/mapDocumentSchema';
 import { validateMapDocument, type MapDocumentLike } from './mapDocumentValidation';
-import { validateLocalMapCommit, validateMapOperation } from './mapDocumentEditValidation';
+import { validateMapOperation } from './mapDocumentEditValidation';
 
 type Patch = Record<string, unknown>;
 
@@ -91,14 +90,6 @@ export function revertOperations<T extends MapDocumentLike>(document: T, operati
   return operations.reduceRight((nextDocument, operation) => (
     revertOperation(nextDocument, operation)
   ), document);
-}
-
-export function applyCommit<T extends MapDocumentLike>(document: T, commit: LocalMapCommit): T {
-  return applyOperations(document, validateLocalMapCommit(commit).operations);
-}
-
-export function revertCommit<T extends MapDocumentLike>(document: T, commit: LocalMapCommit): T {
-  return revertOperations(document, validateLocalMapCommit(commit).operations);
 }
 
 function upsertLayer<T extends MapDocumentLike>(document: T, layer: MapLayer): T {

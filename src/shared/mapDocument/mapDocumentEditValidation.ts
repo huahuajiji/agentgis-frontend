@@ -1,10 +1,8 @@
 import {
   ExternalMapOperationRecordSchema,
-  LocalMapCommitSchema,
   MapDocumentEditStateSchema,
   MapOperationSchema,
   type ExternalMapOperationRecord,
-  type LocalMapCommit,
   type MapDocumentEditState,
   type MapOperation
 } from '../../schemas/mapDocumentSchema';
@@ -26,42 +24,15 @@ export function validateExternalMapOperationRecord(value: unknown): ExternalMapO
   };
 }
 
-export function validateLocalMapCommit(value: unknown): LocalMapCommit {
-  const commit = LocalMapCommitSchema.parse(value);
-  if (!commit.operations.length) {
-    throw new Error(`Commit has no operations: ${commit.id}`);
-  }
-  if (commit.parentCommitId && commit.parentCommitId === commit.id) {
-    throw new Error(`Commit cannot point to itself as parent: ${commit.id}`);
-  }
-
-  return {
-    ...commit,
-    operations: commit.operations.map(validateMapOperation)
-  };
-}
-
 export function validateMapDocumentEditState(value: unknown): MapDocumentEditState {
   const editState = MapDocumentEditStateSchema.parse(value);
-  if (editState.headCommitId && !editState.commitsById[editState.headCommitId]) {
-    throw new Error(`Head commit does not exist: ${editState.headCommitId}`);
-  }
-
-  const commitsById = Object.fromEntries(
-    Object.entries(editState.commitsById).map(([commitId, commit]) => {
-      if (commit.id !== commitId) {
-        throw new Error(`Commit key does not match commit id: ${commitId}`);
-      }
-      return [commitId, validateLocalMapCommit(commit)];
-    })
-  );
 
   return {
     ...editState,
     workingOperations: editState.workingOperations.map(validateMapOperation),
     redoOperations: editState.redoOperations.map(validateMapOperation),
-    externalOperations: editState.externalOperations.map(validateExternalMapOperationRecord),
-    commitsById
+    commitPool: editState.commitPool.map(validateMapOperation),
+    externalOperations: editState.externalOperations.map(validateExternalMapOperationRecord)
   };
 }
 

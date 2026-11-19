@@ -12,7 +12,7 @@ AgentGIS 是一个基于 Vue 3 的 GIS 地图文档工作台。它探索一件�
 
 - 导航三个区：**地图 / 项目 / 数据**（另有账户弹窗，是 BYOK 配置入口）
 - 左侧工作区只有三个真实面板：项目列表、图片资源、GeoJSON 导入 / 导出
-- 右侧检查器两个页签：要素（图层树 + 属性）、操作（撤销/重做/提交历史）
+- 右侧检查器两个页签：要素（图层树 + 属性）、操作（撤销/重做/待同步池）
 - 所有占位面板与探索性 demo 已删除，界面没有无响应的按钮
 - 路由使用 hash 模式（静态托管刷新兼容）
 
@@ -21,7 +21,7 @@ AgentGIS 是一个基于 Vue 3 的 GIS 地图文档工作台。它探索一件�
 项目最核心的设计是**操作溯源（Operation-based Architecture）**：每次对地图文档的修改——创建图层、添加要素、重命名、删除、导入 GeoJSON——都会生成一个带类型的 `MapOperation` 对象。这带来了三个关键能力：
 
 - **完整撤销/重做**：`workingOperations` 与 `redoOperations` 双栈，每一步操作都可回退、可重放。
-- **提交历史**：操作可归组为 `LocalMapCommit`，形成可追溯的编辑记录。
+- **待同步池（commit 池）**：未提交操作压缩后可提交进池，作为「尚未同步到后端」的队列；上传成功后清空，撤销可跨池边界。
 - **外部操作追踪**：AI 或外部系统的操作作为 `ExternalMapOperationRecord` 进入系统，可与内部操作历史匹配审计（管道已就绪，尚未接入 LLM）。
 
 这些 `MapOperation` 通过 Zod discriminatedUnion 在运行时校验，涵盖 7 种操作类型（layer.create、layer.update、layer.delete、feature.create、feature.update、feature.delete、geojson.import），类型安全保障贯穿整个数据流。
@@ -32,7 +32,7 @@ AgentGIS 是一个基于 Vue 3 的 GIS 地图文档工作台。它探索一件�
 - 桌面端工作台：垂直导航 + 可折叠侧栏 + 地图工作区 + 检查器 + 账户弹窗。
 - 移动端工作台：地图、项目、数据、我的四个 tab（与桌面端共用同一套状态）。
 - Pinia 本地状态：地图文档状态、账户设置、BYOK 配置。
-- 地图文档模型：图层、要素、已保存地图、草稿地图、本地提交、撤销/重做、外部操作记录。
+- 地图文档模型：图层、要素、已保存地图、草稿地图、commit 池（待同步）、撤销/重做、外部操作记录。
 - GeoJSON 导入/导出。
 - 可选的高德地图底图集成（BYOK：用户自己的 JS API Key 和 Security Code）。
 - 点/线/面绘制与几何编辑（依赖高德 Key）。

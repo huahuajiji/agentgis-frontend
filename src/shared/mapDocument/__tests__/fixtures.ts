@@ -118,6 +118,19 @@ export function withWorkingOperations(
   };
 }
 
+export function withCommitPool(
+  document: MapDocumentLike,
+  commitPool: MapOperation[]
+): MapDocumentLike {
+  return {
+    ...document,
+    edit: {
+      ...document.edit,
+      commitPool
+    }
+  };
+}
+
 let operationSequence = 0;
 
 export function resetOperationSequence() {

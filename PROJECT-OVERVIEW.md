@@ -145,7 +145,7 @@ geojson.import
 
 来源标记：`user` / `ai` / `backend` / `file` / `system`。
 
-关键能力：撤销/重做双栈、提交历史含同步状态、外部操作 `ExternalMapOperationRecord`（`pending/applied/mismatch/failed`）、连续更新自动压缩合并。
+关键能力：撤销/重做双栈（可跨 commit 池边界）、commit 池作为待同步队列（上传后清空）、外部操作 `ExternalMapOperationRecord`（`pending/applied/mismatch/failed`）、连续更新自动压缩合并。
 
 ### 高德地图
 
@@ -157,7 +157,7 @@ BYOK 模式：用户自带 Key + 安全密钥，localStorage 存储。`AmapFeatu
 
 ### 已实现
 
-创建/管理地图文档、图层 CRUD、点线面绘制编辑（需 BYOK）、GeoJSON 导入导出、撤销/重做、提交历史、外部操作记录模型、BYOK 配置、移动端工作流。
+创建/管理地图文档、图层 CRUD、点线面绘制编辑（需 BYOK）、GeoJSON 导入导出、撤销/重做、commit 池、外部操作记录模型、BYOK 配置、移动端工作流。
 
 ---
 
