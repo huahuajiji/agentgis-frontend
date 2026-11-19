@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import AccountModal from './AccountModal.vue';
+import AccountModal from '../dialogs/AccountModal.vue';
 import AppNavRail from './AppNavRail.vue';
 import WorkspaceSidebar from './WorkspaceSidebar.vue';
-import type { NavSection } from '../types';
+import type { NavSection } from '../../types';
 
 defineProps<{
   activeSection: NavSection;

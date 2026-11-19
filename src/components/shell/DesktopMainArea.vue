@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import DraftMapSaveDialog from './DraftMapSaveDialog.vue';
-import InspectorPanel from './InspectorPanel.vue';
-import MapWorkspace from './MapWorkspace.vue';
-import { useGeometryEditTarget } from '../shared/map/useGeometryEditTarget';
-import { useMapDocumentStore } from '../stores/mapDocumentStore';
-import type { InspectorMode, MapAction, MapMode, MapTool, NavSection } from '../types';
+import DraftMapSaveDialog from '../dialogs/DraftMapSaveDialog.vue';
+import InspectorPanel from '../inspector/InspectorPanel.vue';
+import MapWorkspace from '../map/MapWorkspace.vue';
+import { useGeometryEditTarget } from '../../shared/map/useGeometryEditTarget';
+import { useMapDocumentStore } from '../../stores/mapDocumentStore';
+import type { InspectorMode, MapAction, MapMode, MapTool, NavSection } from '../../types';
 
 defineProps<{
   activeSection: NavSection;

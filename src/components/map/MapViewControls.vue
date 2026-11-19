@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MapAction } from '../types';
+import type { MapAction } from '../../types';
 
 const mapAction = defineModel<MapAction>('mapAction', { required: true });
 

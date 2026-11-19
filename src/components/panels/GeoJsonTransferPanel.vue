@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { Feature as GeoJsonFeature, FeatureCollection } from 'geojson';
-import { useMapDocumentStore, type LayerRole } from '../stores/mapDocumentStore';
+import { useMapDocumentStore, type LayerRole } from '../../stores/mapDocumentStore';
 
 type GeoJsonImportPayload = GeoJsonFeature | FeatureCollection;
 

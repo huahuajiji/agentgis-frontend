@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import DesktopLeftPane from './DesktopLeftPane.vue';
 import DesktopMainArea from './DesktopMainArea.vue';
 import WorkspaceHeadActions from './WorkspaceHeadActions.vue';
-import type { NavSection } from '../types';
+import type { NavSection } from '../../types';
 
 const route = useRoute();
 const router = useRouter();

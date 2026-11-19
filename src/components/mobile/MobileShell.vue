@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import AccountModal from '../AccountModal.vue';
-import AmapBaseMap from '../AmapBaseMap.vue';
-import DraftMapSaveDialog from '../DraftMapSaveDialog.vue';
-import GeoJsonTransferPanel from '../GeoJsonTransferPanel.vue';
-import LayerImageResourcesPanel from '../LayerImageResourcesPanel.vue';
-import MapBoundsFrame from '../MapBoundsFrame.vue';
-import MapDocumentList from '../MapDocumentList.vue';
-import MapModeSelector from '../MapModeSelector.vue';
+import AccountModal from '../dialogs/AccountModal.vue';
+import AmapBaseMap from '../map/AmapBaseMap.vue';
+import DraftMapSaveDialog from '../dialogs/DraftMapSaveDialog.vue';
+import GeoJsonTransferPanel from '../panels/GeoJsonTransferPanel.vue';
+import LayerImageResourcesPanel from '../panels/LayerImageResourcesPanel.vue';
+import MapBoundsFrame from '../map/MapBoundsFrame.vue';
+import MapDocumentList from '../panels/MapDocumentList.vue';
+import MapModeSelector from '../map/MapModeSelector.vue';
 import LayerCreateDialog from '../shared/LayerCreateDialog.vue';
 import LayerFeatureTree from '../shared/LayerFeatureTree.vue';
 import OperationHistoryPanel from '../shared/OperationHistoryPanel.vue';

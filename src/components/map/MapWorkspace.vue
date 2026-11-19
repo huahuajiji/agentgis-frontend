@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import AmapBaseMap from './AmapBaseMap.vue';
 import MapBoundsFrame from './MapBoundsFrame.vue';
 import MapCommandBar from './MapCommandBar.vue';
-import type { MapAction, MapMode, MapTool } from '../types';
+import type { MapAction, MapMode, MapTool } from '../../types';
 
 const props = defineProps<{
   geometryEditFeatureId: string | null;

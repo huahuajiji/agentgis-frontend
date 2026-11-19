@@ -246,10 +246,10 @@ v5–v7、v9_2、v9_4、V10 均为历史探索；本仓库只保留 V9.3 前端�
 **前端**
 
 ```powershell
-cd C:\Users\32083\aigc\webgis\fristwebgis\agentgis
+cd C:\Users\32083\aigc\webgis\fristwebgis\agentgis-frontend
 npm install && npm run dev
 ```
 
 打开 `http://127.0.0.1:5173/#/map` → 左下角「账户」配置高德 Key（可选）→ 开始使用。
 
-**后端（阶段 3，尚未开始）**：FastAPI + SQLite，接口契约见 §4。
+**后端（阶段 3，尚未开始）**：FastAPI + SQLite，独立仓库 `agentgis-backend`，接口契约见 §4。

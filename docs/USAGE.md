@@ -4,6 +4,8 @@
 
 ## 安装依赖
 
+先进入前端目录：
+
 ```powershell
 npm install
 ```

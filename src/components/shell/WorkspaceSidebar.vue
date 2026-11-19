@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { NavSection } from '../types';
-import GeoJsonTransferPanel from './GeoJsonTransferPanel.vue';
-import LayerImageResourcesPanel from './LayerImageResourcesPanel.vue';
-import MapDocumentList from './MapDocumentList.vue';
+import type { NavSection } from '../../types';
+import GeoJsonTransferPanel from '../panels/GeoJsonTransferPanel.vue';
+import LayerImageResourcesPanel from '../panels/LayerImageResourcesPanel.vue';
+import MapDocumentList from '../panels/MapDocumentList.vue';
 
 const props = defineProps<{
   activeSection: NavSection;

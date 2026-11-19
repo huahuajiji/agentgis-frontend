@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MapMode, MapTool } from '../types';
+import type { MapMode, MapTool } from '../../types';
 import MapModeTools from './MapModeTools.vue';
 
 const mode = defineModel<MapMode>('mode', { required: true });

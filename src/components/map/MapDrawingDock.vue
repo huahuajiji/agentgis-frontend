@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AmapDrawGeometry, AmapDrawingState } from '../shared/amap/amapDrawingSession';
+import type { AmapDrawGeometry, AmapDrawingState } from '../../shared/amap/amapDrawingSession';
 
 defineProps<{
   enabled: boolean;

@@ -13,7 +13,7 @@
 - `src/App.vue`：渲染当前路由。
 - `src/router.ts`：三条导航路由（`/map`、`/project`、`/data`），全部映射到同一个 `AppLayout`，通过 `meta.section` 区分当前区。
 - `src/layouts/AppLayout.vue`：同时挂载桌面端和移动端 shell，由 CSS 媒体查询（1039px）决定显示哪一个。
-- `src/components/DesktopShell.vue`：桌面端工作台组合（左栏 + 工作区 + 检查器）。
+- `src/components/shell/DesktopShell.vue`：桌面端工作台组合（左栏 + 工作区 + 检查器）。
 - `src/components/mobile/MobileShell.vue`：移动端四 tab 工作台。
 
 桌面端多面板同时展示：左侧工作区、中间地图、右侧检查器。移动端把同一套任务拆成四个 tab：地图、项目、数据、我的。两端共用同一套 Pinia store 和地图文档模型。
@@ -86,7 +86,7 @@
 - `src/shared/amap/amapEditSession.ts`：几何编辑会话（拖拽节点）
 - `src/shared/amap/amapDraftGeometry.ts`：草稿几何转换
 - `src/shared/map/amapFeatureAdapter.ts`：Store ↔ 覆盖物双向绑定
-- `src/components/AmapBaseMap.vue`：画布容器，编排以上模块
+- `src/components/map/AmapBaseMap.vue`：画布容器，编排以上模块
 
 应用只有在开启 BYOK 且 JS API Key / Security Code 都存在时，才会尝试加载高德底图；否则地图区显示提示。
 

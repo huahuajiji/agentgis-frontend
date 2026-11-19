@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useMapDocumentStore } from '../stores/mapDocumentStore';
+import { useMapDocumentStore } from '../../stores/mapDocumentStore';
 
 const mapDocumentStore = useMapDocumentStore();
 

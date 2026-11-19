@@ -1,29 +1,29 @@
 <script setup lang="ts">
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { loadAmap, type AMapMapInstance } from '../shared/amap/amapLoader';
+import { loadAmap, type AMapMapInstance } from '../../shared/amap/amapLoader';
 import {
   AmapEditSession,
   createEmptyAmapEditState
-} from '../shared/amap/amapEditSession';
+} from '../../shared/amap/amapEditSession';
 import {
   AmapDrawingSession,
   createEmptyAmapDrawingState,
   type AmapDrawGeometry
-} from '../shared/amap/amapDrawingSession';
-import { AmapFeatureAdapter } from '../shared/map/amapFeatureAdapter';
+} from '../../shared/amap/amapDrawingSession';
+import { AmapFeatureAdapter } from '../../shared/map/amapFeatureAdapter';
 import {
   drawGeometryLabel,
   validateDraftFeatureForLayer,
   validateDraftTargetLayer
-} from '../shared/mapDocument/mapDocumentDraftValidation';
+} from '../../shared/mapDocument/mapDocumentDraftValidation';
 import {
   useMapDocumentStore,
   type LngLat,
   type MapBounds,
   type MapLayer,
   type MapViewport
-} from '../stores/mapDocumentStore';
-import { useSettingsStore } from '../stores/settingsStore';
+} from '../../stores/mapDocumentStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import MapDrawingDock from './MapDrawingDock.vue';
 
 const props = defineProps<{

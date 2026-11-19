@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue';
-import { cloneSettings, useSettingsStore, type SettingsState } from '../stores/settingsStore';
+import { cloneSettings, useSettingsStore, type SettingsState } from '../../stores/settingsStore';
 
 const props = defineProps<{
   open: boolean;

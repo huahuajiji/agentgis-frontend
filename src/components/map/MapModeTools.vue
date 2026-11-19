@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MapTool } from '../types';
+import type { MapTool } from '../../types';
 
 const tool = defineModel<MapTool>({ required: true });
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useMapDocumentStore, type SavedMapDocument } from '../stores/mapDocumentStore';
+import { useMapDocumentStore, type SavedMapDocument } from '../../stores/mapDocumentStore';
 
 const open = defineModel<boolean>('open', { required: true });
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { INSPECTOR_TABS, type InspectorMode } from '../types';
-import { useMapDocumentStore, type LayerGeometryType, type LayerRole } from '../stores/mapDocumentStore';
+import { INSPECTOR_TABS, type InspectorMode } from '../../types';
+import { useMapDocumentStore, type LayerGeometryType, type LayerRole } from '../../stores/mapDocumentStore';
 import InspectorSearch from './InspectorSearch.vue';
-import LayerCreateDialog from './shared/LayerCreateDialog.vue';
-import LayerFeatureTree from './shared/LayerFeatureTree.vue';
-import OperationHistoryPanel from './shared/OperationHistoryPanel.vue';
+import LayerCreateDialog from '../shared/LayerCreateDialog.vue';
+import LayerFeatureTree from '../shared/LayerFeatureTree.vue';
+import OperationHistoryPanel from '../shared/OperationHistoryPanel.vue';
 
 const mode = defineModel<InspectorMode>('mode', { required: true });
 

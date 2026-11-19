@@ -2,7 +2,7 @@
 
 AgentGIS 是一个基于 Vue 3 的 GIS 地图文档工作台。它探索一件事：地图画布、图层/文档管理、要素检查、操作历史、人机协同审核，怎样被组织进一个足够清晰、可继续扩展的产品界面里。
 
-这个仓库是纯前端应用：没有内置任何地图 API Key，底图使用 BYOK（用户自带高德 Key）。后端服务在路线图中（见「路线图」一节），当前数据保存在浏览器 localStorage。
+这个仓库是 AgentGIS 的前端：没有内置任何地图 API Key，底图使用 BYOK（用户自带高德 Key）。后端仓库独立（`agentgis-backend`），接入前数据保存在浏览器 localStorage。
 
 ## 当前状态（2026-11-18）
 
@@ -97,19 +97,29 @@ hash 模式，路径形如 `/#/map`：
 ## 目录结构（简）
 
 ```
-src/
-├── components/          桌面工作台、检查器、地图组件、面板
-│   ├── mobile/          移动端 shell 与底部导航
-│   └── shared/          通用组件（对话框、图层树、操作历史…）
-├── layouts/AppLayout.vue    同时挂载桌面与移动 shell
-├── shared/
-│   ├── mapDocument/     文档模型的纯函数模块（14 个）
-│   ├── amap/            高德集成（加载、绘制会话、编辑会话）
-│   └── map/             要素适配器、几何编辑目标
-├── schemas/mapDocumentSchema.ts   Zod 单一真相源
-├── stores/              Pinia：mapDocumentStore、settingsStore
-├── router.ts            hash 路由
-└── styles.css           全局样式（CSS 变量 + class 组织）
+.
+├── index.html
+├── package.json / vite.config.ts / tsconfig*.json
+└── src/
+    ├── components/
+    │   ├── shell/        桌面外壳（导航栏、左栏、主区、顶栏按钮）
+    │   ├── map/          地图工作区（画布、命令栏、模式/工具、绘制坞）
+    │   ├── panels/       侧栏面板（项目列表、图片资源、GeoJSON 收发）
+    │   ├── inspector/    检查器（两页签容器与搜索）
+    │   ├── dialogs/      弹窗（账户、草稿保存）
+    │   ├── mobile/       移动端 shell 与底部导航
+    │   └── shared/       通用组件（对话框、图层树、操作历史…）
+    ├── layouts/AppLayout.vue    同时挂载桌面与移动 shell
+    ├── shared/
+    │   ├── mapDocument/  文档模型的纯函数模块（14 个）+ __tests__
+    │   ├── amap/         高德集成（加载、绘制会话、编辑会话）
+    │   └── map/          要素适配器、几何编辑目标
+    ├── schemas/mapDocumentSchema.ts   Zod 单一真相源
+    ├── stores/           Pinia：mapDocumentStore、settingsStore
+    ├── router.ts         hash 路由
+    └── styles.css        全局样式（CSS 变量 + class 组织）
+
+backend/                  后端（阶段 3 创建，见 backend/README.md）
 ```
 
 ## 文档

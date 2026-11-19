@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useMapDocumentStore, type SavedMapDocument } from '../stores/mapDocumentStore';
-import ConfirmActionDialog from './shared/ConfirmActionDialog.vue';
-import TextInputDialog from './shared/TextInputDialog.vue';
+import { useMapDocumentStore, type SavedMapDocument } from '../../stores/mapDocumentStore';
+import ConfirmActionDialog from '../shared/ConfirmActionDialog.vue';
+import TextInputDialog from '../shared/TextInputDialog.vue';
 
 const mapDocumentStore = useMapDocumentStore();
 const keyword = ref('');

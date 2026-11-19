@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NavSection } from '../types';
+import type { NavSection } from '../../types';
 
 defineProps<{
   activeSection: NavSection;
