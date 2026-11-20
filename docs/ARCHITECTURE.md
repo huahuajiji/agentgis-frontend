@@ -12,11 +12,10 @@
 
 - `src/App.vue`：渲染当前路由。
 - `src/router.ts`：三条导航路由（`/map`、`/project`、`/data`），全部映射到同一个 `AppLayout`，通过 `meta.section` 区分当前区。
-- `src/layouts/AppLayout.vue`：同时挂载桌面端和移动端 shell，由 CSS 媒体查询（1039px）决定显示哪一个。
+- `src/layouts/AppLayout.vue`：挂载桌面端 shell（移动端已于 2026-11-20 移除）。
 - `src/components/shell/DesktopShell.vue`：桌面端工作台组合（左栏 + 工作区 + 检查器）。
-- `src/components/mobile/MobileShell.vue`：移动端四 tab 工作台。
 
-桌面端多面板同时展示：左侧工作区、中间地图、右侧检查器。移动端把同一套任务拆成四个 tab：地图、项目、数据、我的。两端共用同一套 Pinia store 和地图文档模型。
+左侧工作区、中间地图、右侧检查器同时展示。
 
 ### 前端收敛后的界面构成
 
@@ -92,7 +91,7 @@
 
 ## 几何编辑目标
 
-`src/shared/map/useGeometryEditTarget.ts` 根据当前地图模式、工具和选中要素计算几何编辑目标，桌面端与移动端复用同一套判断。
+`src/shared/map/useGeometryEditTarget.ts` 根据当前地图模式、工具和选中要素计算几何编辑目标。
 
 ## 外部操作（为 AI 预留）
 
@@ -109,7 +108,6 @@
 - 高德地图绘制 / 编辑集成（BYOK）
 - GeoJSON 导入 / 导出
 - 桌面端工作台 UI（三区导航 + 三面板 + 两页签检查器）
-- 移动端地图 / 项目 / 数据 / 账户工作流
 - `shared/mapDocument/` 核心模块的 Vitest 单测（撤销重做、操作压缩、GeoJSON 收发）
 
 暂未包含（按路线图逐项补充）：
