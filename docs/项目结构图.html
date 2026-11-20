@@ -192,8 +192,7 @@
   <div class="group">
     <div class="row">
       <div class="box real" style="flex:1;min-width:200px"><b>layouts/AppLayout.vue</b><small>挂载桌面端 shell</small></div>
-      <div class="box real" style="flex:1;min-width:200px"><b>DesktopShell.vue</b><small>桌面指挥台 · &gt; 1039px</small></div>
-      <div class="box real" style="flex:1;min-width:200px"><b>mobile/MobileShell.vue</b><small>四 tab 工作台 · ≤ 1039px</small><span class="chip real">311 行</span></div>
+      <div class="box real" style="flex:1;min-width:200px"><b>DesktopShell.vue</b><small>桌面指挥台 · 三栏布局</small></div>
     </div>
   </div>
 </div>
@@ -334,12 +333,10 @@ flowchart TB
     subgraph FE["前端 agentgis-frontend（Vue 3 + TS + Vite，当前开发中）"]
         direction TB
         A1["index.html → main.ts → router.ts（hash 路由）"]
-        A2["layouts/AppLayout.vue（挂桌面/移动两套 shell）"]
+        A2["layouts/AppLayout.vue（挂桌面 shell）"]
         D1["components/shell/DesktopShell 桌面三栏"]
-        M1["components/mobile/MobileShell 四 tab"]
         A1 --> A2
         A2 --> D1
-        A2 --> M1
 
         subgraph SHELL["shell/"]
             S1["AppNavRail · 地图/项目/数据 三区导航"]

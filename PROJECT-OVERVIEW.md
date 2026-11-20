@@ -196,7 +196,7 @@ V1 MVP → V2 Agent+RAG → V3 产品硬化 → V4 AMap BYOK   (历史路线)
   ↓          ↓               ↓              ↓
 固定流程   LangGraph       评测+验收      真实地图API
 
-V8 AI地图编辑器 → V9 LangGraph Lite → V9.3 Vue前端（本仓库，操作式架构+AMap+移动端）
+V8 AI地图编辑器 → V9 LangGraph Lite → V9.3 Vue前端（本仓库，操作式架构+AMap；移动端于 2026-11-20 移除）
        │                 │                    │
        └─────────────────┴────────────────────┘
                          ↓
