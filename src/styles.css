@@ -618,6 +618,44 @@ button:disabled {
   color: var(--accent);
 }
 
+.text-action.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.text-action.primary:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.text-action:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 6px;
+  padding: 4px 2px 8px;
+  flex-wrap: wrap;
+}
+
+.sync-message {
+  margin: 0 2px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.sync-message.is-error {
+  color: #b42318;
+}
+
+.sync-message.is-syncing {
+  color: var(--accent);
+}
+
 .collapsible-panel-head {
   background: transparent;
 }

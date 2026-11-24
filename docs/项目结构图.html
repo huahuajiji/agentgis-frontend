@@ -265,11 +265,11 @@
     <p class="g-title">shared/ — 纯函数与引擎隔离（store 之下）</p>
     <div class="row">
       <div class="box state" style="flex:2;min-width:380px">
-        <b>shared/mapDocument/</b><span class="chip state">15 个模块</span>
-        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentIdb（IndexedDB）· mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
+        <b>shared/mapDocument/</b><span class="chip state">17 个模块</span>
+        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentIdb（IndexedDB）· mapDocumentRemote（HTTP）· mapDocumentSync（同步纯函数）· mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
-        <b>shared/mapDocument/__tests__/</b><span class="chip state">65 例 · Vitest</span>
+        <b>shared/mapDocument/__tests__/</b><span class="chip state">82 例 · Vitest</span>
         <small>撤销/重做 9 例 · 操作压缩 16 例 · GeoJSON 收发 21 例 · fixtures.ts 共用夹具</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
@@ -374,7 +374,7 @@ flowchart TB
         ST1 --> ST3
         ST3 --> ST2
         ST3 --> T1
-        LS["IndexedDB · 本地持久化（2a；2b 接后端 HTTP）"]
+        LS["IndexedDB · 本地持久化 + 手动同步<br/>mapDocumentRemote / mapDocumentSync（2b）"]
         ST3 --> LS
     end
 

@@ -205,7 +205,9 @@ export const SavedMapDocumentSchema = MapDocumentBaseSchema.extend({
   kind: z.literal('saved'),
   workspaceId: z.string().min(1),
   createdAt: z.string().min(1),
-  updatedAt: z.string().min(1)
+  updatedAt: z.string().min(1),
+  // 后端分配的文档 id（doc-xxxx）。可选：本地新建、尚未同步上云的文档没有它。
+  remoteId: z.string().min(1).optional()
 });
 
 export const ActiveDocumentRefSchema = z.union([

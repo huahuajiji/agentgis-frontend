@@ -44,7 +44,7 @@
 - `src/stores/settingsStore.ts`
   - BYOK 开关、高德底图凭据、LLM 占位配置
 
-所有状态都是浏览器本地状态（2a 起为 IndexedDB，旧 localStorage 数据启动时自动迁移），没有服务端同步。
+所有状态都是浏览器本地状态（2a 起为 IndexedDB，旧 localStorage 数据启动时自动迁移）。2b 起可选手动同步到 FastAPI 后端：两个显式动作（从云端拉取 / 同步到云端），无自动上传、无轮询。
 
 ## 地图文档模型
 
@@ -57,7 +57,7 @@
 - 编辑状态：本地操作、撤销/重做栈、commit 池（待同步队列）、外部操作审核记录
 - 7 种 `MapOperation`（discriminatedUnion）：layer.create / layer.update / layer.delete、feature.create / feature.update / feature.delete、geojson.import
 
-文档变更的具体逻辑拆在 `src/shared/mapDocument/` 的 15 个模块中：
+文档变更的具体逻辑拆在 `src/shared/mapDocument/` 的 17 个模块中：
 
 | 模块 | 职责 |
 |---|---|
@@ -69,6 +69,8 @@
 | mapDocumentEditOperations | 操作压缩（连续更新合并） |
 | mapDocumentCollection | 文档集合（新建/重命名/删除地图） |
 | mapDocumentPersistence | 持久化编排：IndexedDB 读写、串行写队列、启动加载与旧 localStorage 迁移 |
+| mapDocumentRemote | 后端 HTTP 客户端：五个 CRUD 端点 + /health，超时与错误归一化 |
+| mapDocumentSync | 同步纯函数：上传 payload 剥离、后端→本地转换、拉取计划、错误翻译 |
 | mapDocumentIdb | IndexedDB 存储层（`idb` 库）：文档按 id 分条 + 草稿 + 元数据，增量写入 |
 | mapDocumentMigration | 旧数据迁移 |
 | mapDocumentDraftValidation | 草稿要素目标校验 |

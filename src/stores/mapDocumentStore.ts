@@ -83,6 +83,21 @@ import type {
   UpdateFeatureGeometryInput,
   UpdateFeaturePropertiesInput
 } from '../shared/mapDocument/mapDocumentValidation';
+import {
+  createRemoteDocument,
+  deleteRemoteDocument,
+  getRemoteDocument,
+  listRemoteDocuments,
+  remoteHealth,
+  updateRemoteDocument
+} from '../shared/mapDocument/mapDocumentRemote';
+import {
+  attachRemoteId,
+  describeSyncError,
+  fromRemoteDetail,
+  planPull,
+  toRemotePayload
+} from '../shared/mapDocument/mapDocumentSync';
 
 export type {
   ActiveDocumentRef,
@@ -965,6 +980,140 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
     }));
   }
 
+  // ── 2b 手动同步 ────────────────────────────────────────────────
+  // 设计：一切由用户显式触发，无自动上传、无轮询。
+  // 同步状态是界面提示，不进入文档 schema。
+
+  const syncStatus = ref<'idle' | 'syncing' | 'error'>('idle');
+  const syncMessage = ref('');
+
+  function setSyncResult(status: 'idle' | 'syncing' | 'error', message: string) {
+    syncStatus.value = status;
+    syncMessage.value = message;
+  }
+
+  /**
+   * 同步当前文档到云端（全量 PUT；首次则 POST 拿 remoteId）。
+   *
+   * 只同步已保存文档——草稿没有文档身份，不参与。
+   * 成功后清空待同步池（池 = 已确认、已上传的改动）。
+   */
+  async function syncActiveDocumentToRemote(): Promise<boolean> {
+    const ref = state.value.activeDocumentRef;
+    if (ref.kind !== 'saved') {
+      setSyncResult('error', '草稿不能直接同步，请先保存为地图');
+      return false;
+    }
+
+    const document = state.value.documentsById[ref.id];
+    if (!document) {
+      setSyncResult('error', '当前文档不存在');
+      return false;
+    }
+
+    setSyncResult('syncing', '正在同步到云端…');
+    const payload = toRemotePayload(document);
+
+    try {
+      let remoteId = document.remoteId;
+      if (remoteId) {
+        try {
+          await updateRemoteDocument(remoteId, document.name, payload);
+        } catch (error) {
+          // 后端文档已被删除（404）→ 重新创建，恢复同步而不是卡死。
+          if (error instanceof Error && 'code' in error && error.code === 'not_found') {
+            const created = await createRemoteDocument(document.name, payload);
+            remoteId = created.id;
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        const created = await createRemoteDocument(document.name, payload);
+        remoteId = created.id;
+      }
+
+      // 回写 remoteId，并清空待同步池。
+      const current = state.value.documentsById[ref.id];
+      if (current) {
+        state.value = MapDocumentStateSchema.parse({
+          ...state.value,
+          documentsById: {
+            ...state.value.documentsById,
+            [ref.id]: SavedMapDocumentSchema.parse({
+              ...attachRemoteId(current, remoteId),
+              edit: validateMapDocumentEditState({
+                ...current.edit,
+                commitPool: []
+              })
+            })
+          }
+        });
+        persistState(state.value);
+      }
+
+      setSyncResult('idle', '已同步到云端，待同步池已清空');
+      return true;
+    } catch (error) {
+      setSyncResult('error', describeSyncError(error));
+      return false;
+    }
+  }
+
+  /**
+   * 从云端拉取。
+   *
+   * 流程：GET 列表 → 对"本地没有或远程更新"的文档逐个 GET 详情 →
+   * Zod 校验 → 合并进 documentsById（本地 id 不变，remoteId 补齐）。
+   * 本地较新的文档保留本地（最后写入者赢的对偶：以 updatedAt 晚者为准）。
+   */
+  async function pullFromRemote(): Promise<boolean> {
+    setSyncResult('syncing', '正在从云端拉取…');
+    try {
+      await remoteHealth();
+      const metas = await listRemoteDocuments();
+      const remoteIds = planPull(state.value.documentsById, metas);
+
+      for (const remoteId of remoteIds) {
+        const detail = await getRemoteDocument(remoteId);
+        const draft = fromRemoteDetail(detail);
+        if (!draft) {
+          console.warn('[AgentGIS] 跳过后端文档（payload 缺 id）', remoteId);
+          continue;
+        }
+
+        let parsed: SavedMapDocument;
+        try {
+          parsed = SavedMapDocumentSchema.parse(draft);
+        } catch (error) {
+          console.warn('[AgentGIS] 跳过后端文档（校验失败）', remoteId, error);
+          continue;
+        }
+
+        state.value = MapDocumentStateSchema.parse({
+          ...state.value,
+          defaultWorkspace: {
+            ...state.value.defaultWorkspace,
+            mapIds: [...new Set([...state.value.defaultWorkspace.mapIds, parsed.id])]
+          },
+          documentsById: {
+            ...state.value.documentsById,
+            [parsed.id]: parsed
+          }
+        });
+      }
+
+      persistState(state.value);
+      setSyncResult('idle', remoteIds.length
+        ? `已从云端拉取 ${remoteIds.length} 份文档`
+        : '云端没有新内容');
+      return true;
+    } catch (error) {
+      setSyncResult('error', describeSyncError(error));
+      return false;
+    }
+  }
+
   function createMap(input: Omit<CreateMapInput, 'viewport'> & Partial<Pick<CreateMapInput, 'viewport'>>) {
     const result = createMapInCollection(state.value, {
       ...input,
@@ -984,7 +1133,17 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
   }
 
   function deleteMap(input: DeleteMapInput | string) {
+    const mapId = typeof input === 'string' ? input : input.mapId;
+    const remoteId = state.value.documentsById[mapId]?.remoteId;
     const result = deleteMapFromCollection(state.value, input);
+
+    if (remoteId) {
+      // 本地删除先行，云端删除尽力而为：失败不阻断、不回滚，只记录提示。
+      void deleteRemoteDocument(remoteId).catch((error) => {
+        console.warn('[AgentGIS] 云端删除失败（本地已删除）', error);
+      });
+    }
+
     state.value = result.state;
     return persistAndReturn(state.value, result.value);
   }
@@ -1048,6 +1207,10 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
     state,
     isHydrating,
     initializePersistence,
+    syncStatus,
+    syncMessage,
+    syncActiveDocumentToRemote,
+    pullFromRemote,
     activeDocumentRef,
     defaultWorkspace,
     draftDocument,

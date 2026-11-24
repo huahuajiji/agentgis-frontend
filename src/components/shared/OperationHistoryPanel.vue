@@ -73,6 +73,19 @@ function clearExternalOperations() {
   mapDocumentStore.clearExternalOperations();
   openSections.value = new Set([...openSections.value, 'external']);
 }
+
+const syncStatus = computed(() => mapDocumentStore.syncStatus);
+const syncMessage = computed(() => mapDocumentStore.syncMessage);
+const syncDisabled = computed(() => syncStatus.value === 'syncing');
+const pullDisabled = computed(() => syncStatus.value === 'syncing');
+
+async function syncToRemote() {
+  await mapDocumentStore.syncActiveDocumentToRemote();
+}
+
+async function pullFromRemote() {
+  await mapDocumentStore.pullFromRemote();
+}
 </script>
 
 <template>
@@ -170,6 +183,31 @@ function clearExternalOperations() {
         <h4>待同步池</h4>
         <span>待同步 {{ commitPool.length }}</span>
       </div>
+
+      <div class="sync-actions">
+        <button
+          class="text-action"
+          type="button"
+          :disabled="pullDisabled"
+          title="从后端拉取云端文档（本地较新的保留本地）"
+          @click="pullFromRemote"
+        >
+          从云端拉取
+        </button>
+        <button
+          class="text-action primary"
+          type="button"
+          :disabled="!commitPool.length || syncDisabled"
+          title="把整份文档上传到云端；成功后清空待同步池"
+          @click="syncToRemote"
+        >
+          同步到云端（{{ commitPool.length }}）
+        </button>
+      </div>
+
+      <p v-if="syncMessage" class="sync-message" :class="`is-${syncStatus}`">
+        {{ syncMessage }}
+      </p>
 
       <div class="operation-list">
         <OperationCard

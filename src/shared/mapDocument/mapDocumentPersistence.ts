@@ -78,6 +78,7 @@ export async function loadStoredStateAsync(): Promise<{
           defaultViewport: DEFAULT_VIEWPORT
         });
         persistMigrationNotices(result.notices);
+        vacuumLegacyKeys();
         return { state: result.state, source: 'indexeddb' };
       }
     } catch (error) {
@@ -247,6 +248,26 @@ function backupRawStoredState(raw: string) {
     window.localStorage.setItem(MIGRATION_BACKUP_KEY, raw);
   } catch {
     // Local recovery backup is best-effort.
+  }
+}
+
+/**
+ * 迁移尸体清理（2b）：IndexedDB 确认可用且有数据后，
+ * 旧 localStorage 的三个 key（主数据 / 备份 / 迁移报告）已无作用，一并删除。
+ * 只在"IDB 读到了真实状态"这条路径上调用，绝不先删后验。
+ */
+function vacuumLegacyKeys() {
+  if (!canUseLocalStorage()) {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    window.localStorage.removeItem(LEGACY_DOCUMENT_KEY);
+    window.localStorage.removeItem(MIGRATION_NOTICE_KEY);
+    window.localStorage.removeItem(MIGRATION_BACKUP_KEY);
+  } catch {
+    // Cleanup is best-effort.
   }
 }
 

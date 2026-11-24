@@ -59,7 +59,7 @@ npm run preview
 3. 填写高德 JS API Key 和 Security Code。
 4. 保存。
 
-设置保存在浏览器 localStorage 的 `agentgis:v9_3:settings` key 下。地图文档状态保存在浏览器 IndexedDB（数据库名 `agentgis`，旧 localStorage 数据首次启动自动迁移），不会同步到服务器。
+设置保存在浏览器 localStorage 的 `agentgis:v9_3:settings` key 下。地图文档状态保存在浏览器 IndexedDB（数据库名 `agentgis`，旧 localStorage 数据首次启动自动迁移）。同步到后端需手动操作：右侧检查器「操作」页签的待同步池里有「从云端拉取」和「同步到云端」按钮；未点击则只存在本地。
 
 ## 界面总览
 
