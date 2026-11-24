@@ -22,9 +22,7 @@ const pendingExternalOperations = computed(() => (
   externalOperations.value.filter((operation) => operation.status === 'pending')
 ));
 const canCommit = computed(() => editState.value.workingOperations.length > 0);
-const canUndo = computed(() => (
-  editState.value.workingOperations.length + editState.value.commitPool.length > 0
-));
+const canUndo = computed(() => editState.value.workingOperations.length > 0);
 const canRedo = computed(() => editState.value.redoOperations.length > 0);
 
 function isSectionOpen(section: OperationPanelSection) {
@@ -131,7 +129,7 @@ function clearExternalOperations() {
             class="text-action"
             type="button"
             :disabled="!canUndo"
-            title="撤销最后一条操作（未提交退完后退待同步池里的）"
+            title="撤销最后一条未提交操作（已打包进待同步池的操作不可撤销）"
             @click="undoWorkingOperation"
           >
             撤销
@@ -149,10 +147,10 @@ function clearExternalOperations() {
             class="text-action"
             type="button"
             :disabled="!canCommit"
-            title="把未提交操作压缩后放入待同步池"
+            title="把未提交操作压缩（打包）后放入待同步池；打包后不可撤销"
             @click="commitWorkingOperations"
           >
-            提交到 commit 池
+            打包
           </button>
           <span>已执行 {{ workingOperations.length }} · 可重做 {{ redoOperations.length }}</span>
         </div>

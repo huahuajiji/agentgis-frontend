@@ -651,8 +651,9 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
   }
 
   /**
-   * 把未提交操作压缩后放入 commit 池（待同步队列）。
+   * 打包：把未提交操作压缩后放入 commit 池（待同步队列）。
    * 池子不建历史链：它的职责是标记"有哪些改动还没同步到后端"。
+   * 打包即"结账"，进池的操作不可再撤销（撤销只作用于 workingOperations）。
    * 返回入池的操作数（0 表示没有可提交内容或全部湮灭）。
    */
   function commitWorkingOperations(): number {

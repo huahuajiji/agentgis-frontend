@@ -4,7 +4,6 @@ import { validateMapDocumentEditState } from '../mapDocumentEditValidation';
 import { flattenLegacyCommitsForTest, normalizeStoredState } from '../mapDocumentMigration';
 import { applyOperations } from '../mapDocumentOperationApply';
 import {
-  redoWorkingOperation,
   undoWorkingOperation
 } from '../mapDocumentUndoRedo';
 import {
@@ -40,7 +39,7 @@ describe('commit 池 - 提交语义', () => {
   });
 });
 
-describe('commit 池 - 跨栈撤销/重做', () => {
+describe('commit 池 - 撤销边界（打包后不可撤销）', () => {
   function buildDocumentWithPooledCreate() {
     const layer = makeLayer({ id: 'layer-1' });
     const feature = makeFeature('feature-1', layer.id, pointGeoJson());
@@ -49,7 +48,7 @@ describe('commit 池 - 跨栈撤销/重做', () => {
     const baseDocument = withLayers(makeDocument(), [layer]);
     const builtDocument = applyOperations(baseDocument, [createOperation]);
 
-    // 操作已提交进池：working 空、池里有
+    // 操作已打包进池：working 空、池里有
     return {
       document: withCommitPool(builtDocument, [createOperation]),
       createOperation,
@@ -57,29 +56,16 @@ describe('commit 池 - 跨栈撤销/重做', () => {
     };
   }
 
-  it('working 为空时撤销会从池里退，操作进 redo 栈并离开池', () => {
-    const { document, createOperation } = buildDocumentWithPooledCreate();
+  it('working 为空时撤销不动池，原样返回', () => {
+    const { document } = buildDocumentWithPooledCreate();
 
     const result = undoWorkingOperation(document as never);
 
-    expect(result.operation).toStrictEqual(createOperation);
-    expect(result.document.edit.commitPool).toEqual([]);
-    expect(result.document.edit.workingOperations).toEqual([]);
-    expect(result.document.edit.redoOperations).toHaveLength(1);
-    expect(result.document.features['feature-1']).toBeUndefined();
-  });
-
-  it('撤销池内操作后重做，操作落回 working 栈（可再次提交）', () => {
-    const { document, createOperation } = buildDocumentWithPooledCreate();
-
-    const undone = undoWorkingOperation(document as never);
-    const redone = redoWorkingOperation(undone.document);
-
-    expect(redone.operation).toStrictEqual(createOperation);
-    expect(redone.document.edit.workingOperations).toHaveLength(1);
-    expect(redone.document.edit.commitPool).toEqual([]);
-    expect(redone.document.edit.redoOperations).toEqual([]);
-    expect(redone.document.features['feature-1']).toBeDefined();
+    expect(result.operation).toBeNull();
+    expect(result.document).toBe(document);
+    expect(result.document.edit.commitPool).toHaveLength(1);
+    expect(result.document.edit.redoOperations).toEqual([]);
+    expect(result.document.features['feature-1']).toBeDefined();
   });
 
   it('working 有操作时撤销只退 working，不动池', () => {
@@ -105,15 +91,27 @@ describe('commit 池 - 跨栈撤销/重做', () => {
     expect(result.document.edit.commitPool[0].id).toBe(pooledOperation.id);
   });
 
-  it('池清空（模拟上传成功）后撤销边界停在清空点', () => {
-    const { document } = buildDocumentWithPooledCreate();
-    const cleared = withCommitPool(document, []);
-    const workingCleared = withWorkingOperations(cleared, []);
+  it('池打包后再撤销 working 不会越过池边界', () => {
+    const layer = makeLayer({ id: 'layer-1' });
+    const pooledFeature = makeFeature('feature-pooled', layer.id, pointGeoJson([108.4, 22.8]));
+    const pooledOperation = featureCreate(pooledFeature);
+    const workingFeature = makeFeature('feature-working', layer.id, pointGeoJson([108.5, 22.9]));
+    const workingOperation = featureCreate(workingFeature);
 
-    const result = undoWorkingOperation(workingCleared as never);
+    const baseDocument = withLayers(makeDocument(), [layer]);
+    const withBoth = applyOperations(baseDocument, [pooledOperation, workingOperation]);
+    const document = withWorkingOperations(
+      withCommitPool(withBoth, [pooledOperation]),
+      [workingOperation]
+    );
 
-    expect(result.operation).toBeNull();
-    expect(result.document).toBe(workingCleared);
+    const undone = undoWorkingOperation(document as never);
+    expect(undone.operation).toStrictEqual(workingOperation);
+
+    // working 已退空：再撤销不会动池里的操作
+    const again = undoWorkingOperation(undone.document);
+    expect(again.operation).toBeNull();
+    expect(again.document.edit.commitPool).toHaveLength(1);
   });
 });
 
