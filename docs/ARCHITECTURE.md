@@ -44,7 +44,7 @@
 - `src/stores/settingsStore.ts`
   - BYOK 开关、高德底图凭据、LLM 占位配置
 
-所有状态都是浏览器本地状态（localStorage），没有服务端同步。
+所有状态都是浏览器本地状态（2a 起为 IndexedDB，旧 localStorage 数据启动时自动迁移），没有服务端同步。
 
 ## 地图文档模型
 
@@ -57,7 +57,7 @@
 - 编辑状态：本地操作、撤销/重做栈、commit 池（待同步队列）、外部操作审核记录
 - 7 种 `MapOperation`（discriminatedUnion）：layer.create / layer.update / layer.delete、feature.create / feature.update / feature.delete、geojson.import
 
-文档变更的具体逻辑拆在 `src/shared/mapDocument/` 的 14 个模块中：
+文档变更的具体逻辑拆在 `src/shared/mapDocument/` 的 15 个模块中：
 
 | 模块 | 职责 |
 |---|---|
@@ -68,7 +68,8 @@
 | mapDocumentOperationApply | 操作的应用与回滚 |
 | mapDocumentEditOperations | 操作压缩（连续更新合并） |
 | mapDocumentCollection | 文档集合（新建/重命名/删除地图） |
-| mapDocumentPersistence | localStorage 持久化 |
+| mapDocumentPersistence | 持久化编排：IndexedDB 读写、串行写队列、启动加载与旧 localStorage 迁移 |
+| mapDocumentIdb | IndexedDB 存储层（`idb` 库）：文档按 id 分条 + 草稿 + 元数据，增量写入 |
 | mapDocumentMigration | 旧数据迁移 |
 | mapDocumentDraftValidation | 草稿要素目标校验 |
 | mapDocumentEditValidation | 操作/提交/外部记录校验 |
@@ -104,7 +105,7 @@
 已经包含：
 
 - 本地状态模型与地图文档编辑
-- 撤销/重做（可跨池边界）、commit 池（待同步）、外部操作审核记录
+- 撤销/重做（只作用于未提交操作）、commit 池（打包后不可撤销）、外部操作审核记录
 - 高德地图绘制 / 编辑集成（BYOK）
 - GeoJSON 导入 / 导出
 - 桌面端工作台 UI（三区导航 + 三面板 + 两页签检查器）

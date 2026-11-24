@@ -67,7 +67,7 @@ import {
   cloneViewport,
   createDefaultState,
   DEFAULT_VIEWPORT,
-  loadStoredState,
+  loadStoredStateAsync,
   persistAndReturn,
   persistState
 } from '../shared/mapDocument/mapDocumentPersistence';
@@ -141,7 +141,31 @@ function nowIso() {
 }
 
 export const useMapDocumentStore = defineStore('mapDocument', () => {
-  const state = ref<MapDocumentState>(loadStoredState());
+  // 先挂一个同步默认状态让界面立即可用；启动时 initializePersistence()
+  // 再从 IndexedDB 读真实数据替换进来。读取期间 isHydrating 为 true。
+  const state = ref<MapDocumentState>(createDefaultState(DEFAULT_VIEWPORT));
+  const isHydrating = ref(true);
+  let hydrationPromise: Promise<void> | null = null;
+
+  /**
+   * 启动时调用一次：从 IndexedDB（必要时经旧 localStorage 迁移）加载真实状态。
+   * 幂等——组件重挂载不会重复读。
+   */
+  function initializePersistence(): Promise<void> {
+    if (!hydrationPromise) {
+      hydrationPromise = loadStoredStateAsync()
+        .then(({ state: storedState }) => {
+          state.value = storedState;
+        })
+        .catch((error) => {
+          console.warn('[AgentGIS] 持久化初始化失败，使用默认状态', error);
+        })
+        .finally(() => {
+          isHydrating.value = false;
+        });
+    }
+    return hydrationPromise;
+  }
 
   const activeDocumentRef = computed(() => state.value.activeDocumentRef);
   const defaultWorkspace = computed(() => state.value.defaultWorkspace);
@@ -1016,11 +1040,13 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
 
   function resetDocument() {
     state.value = createDefaultState();
-    clearStoredState();
+    void clearStoredState();
   }
 
   return {
     state,
+    isHydrating,
+    initializePersistence,
     activeDocumentRef,
     defaultWorkspace,
     draftDocument,

@@ -145,7 +145,7 @@ geojson.import
 
 来源标记：`user` / `ai` / `backend` / `file` / `system`。
 
-关键能力：撤销/重做双栈（可跨 commit 池边界）、commit 池作为待同步队列（上传后清空）、外部操作 `ExternalMapOperationRecord`（`pending/applied/mismatch/failed`）、连续更新自动压缩合并。
+关键能力：撤销/重做双栈（只作用于未提交操作，打包进池后不可撤销）、commit 池作为待同步队列（上传后清空）、外部操作 `ExternalMapOperationRecord`（`pending/applied/mismatch/failed`）、连续更新自动压缩合并。
 
 ### 高德地图
 
@@ -179,7 +179,7 @@ BYOK 模式：用户自带 Key + 安全密钥，localStorage 存储。`AmapFeatu
 |------|------|
 | 操作式架构 | 撤销/重做、历史审计、AI 操作追踪天然支持 |
 | Zod discriminatedUnion | 7 种操作类型运行时严格校验 |
-| 先补测试再动持久化 | localStorage → HTTP 是高风险改造点，测试兜底 |
+| 先补测试再动持久化 | localStorage → IndexedDB → HTTP 是高风险改造点，测试兜底 |
 | 后端存前端 JSON，不重新建模 | 单表即可上线，避免接口层与模型层双维护 |
 | 单端点 + operation 分发 | 前端一个函数，加算子不改接口（借 WebGIS-Dev 形状） |
 | BYOK 地图 | 用户自带 Key，仓库不含凭据 |
@@ -220,7 +220,7 @@ v5–v7、v9_2、v9_4、V10 均为历史探索；本仓库只保留 V9.3 前端�
 
 | 限制 | 状态 |
 |------|------|
-| 仅 localStorage 持久化，清缓存即丢 | 阶段 3 替换为后端 |
+| 仅浏览器本地持久化（IndexedDB），换浏览器即丢 | 2b 接后端后解决 |
 | 自动化测试只覆盖三个纯函数模块（46 用例），组件层未测 | 阶段 2 已完成核心部分；组件测试延后 |
 | 无部署、无 CI | 阶段 4 |
 | 移动端已移除（2026-11-20，专注桌面端） | 不再计划 |
@@ -229,11 +229,11 @@ v5–v7、v9_2、v9_4、V10 均为历史探索；本仓库只保留 V9.3 前端�
 
 ### 后端
 
-尚不存在，按 §6 计划从最小纵切开始。
+`agentgis-backend` 仓库：FastAPI + SQLite 文档 CRUD 已完成（第一刀，14 例 pytest），空间分析待第三刀。
 
 ### 下一步
 
-阶段 2（Vitest 单测）已完成：撤销/重做 9 例、操作压缩 16 例、GeoJSON 收发 21 例，共 46 例通过。下一步进入阶段 3——FastAPI 后端纵切（文档持久化 + buffer/overlay 两个空间算子），用 HTTP 替换 `mapDocumentPersistence.ts` 的 localStorage。阶段总结见工作区根目录的 `阶段总结-02-单元测试.md`。
+阶段 2（Vitest 单测）已完成。阶段 3 拆为：**2a 持久化层换 IndexedDB（✅ 2026-11-24，65 例）→ 2b 前端手动同步后端（拉取/上传各一个显式动作）→ 第三刀空间分析 buffer/overlay**。阶段总结见工作区根目录的 `阶段总结-02-单元测试.md`。
 
 ---
 

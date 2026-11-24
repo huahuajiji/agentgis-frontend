@@ -2,7 +2,7 @@
 
 AgentGIS 是一个基于 Vue 3 的 GIS 地图文档工作台。它探索一件事：地图画布、图层/文档管理、要素检查、操作历史、人机协同审核，怎样被组织进一个足够清晰、可继续扩展的产品界面里。
 
-这个仓库是 AgentGIS 的前端：没有内置任何地图 API Key，底图使用 BYOK（用户自带高德 Key）。后端仓库独立（`agentgis-backend`），接入前数据保存在浏览器 localStorage。
+这个仓库是 AgentGIS 的前端：没有内置任何地图 API Key，底图使用 BYOK（用户自带高德 Key）。后端仓库独立（`agentgis-backend`），接入前数据保存在浏览器 IndexedDB（旧 localStorage 数据首次启动时自动迁移）。
 
 ## 当前状态（2026-11-18）
 
@@ -21,7 +21,7 @@ AgentGIS 是一个基于 Vue 3 的 GIS 地图文档工作台。它探索一件�
 项目最核心的设计是**操作溯源（Operation-based Architecture）**：每次对地图文档的修改——创建图层、添加要素、重命名、删除、导入 GeoJSON——都会生成一个带类型的 `MapOperation` 对象。这带来了三个关键能力：
 
 - **完整撤销/重做**：`workingOperations` 与 `redoOperations` 双栈，每一步操作都可回退、可重放。
-- **待同步池（commit 池）**：未提交操作压缩后可提交进池，作为「尚未同步到后端」的队列；上传成功后清空，撤销可跨池边界。
+- **待同步池（commit 池）**：未提交操作点「打包」压缩后进入待同步池，作为「尚未同步到后端」的队列；上传成功后清空。打包后不可撤销——撤销只作用于未提交操作。
 - **外部操作追踪**：AI 或外部系统的操作作为 `ExternalMapOperationRecord` 进入系统，可与内部操作历史匹配审计（管道已就绪，尚未接入 LLM）。
 
 这些 `MapOperation` 通过 Zod discriminatedUnion 在运行时校验，涵盖 7 种操作类型（layer.create、layer.update、layer.delete、feature.create、feature.update、feature.delete、geojson.import），类型安全保障贯穿整个数据流。
@@ -131,8 +131,8 @@ backend/                  后端（阶段 3 创建，见 backend/README.md）
 
 ## 当前限制
 
-- 仅 localStorage 持久化（后端接入后替换）。
-- 自动化测试目前只覆盖 `shared/mapDocument/` 的三个核心模块（46 个用例），组件层尚未测试。
+- 仅浏览器本地持久化（IndexedDB；后端同步为下一步 2b）。
+- 自动化测试目前只覆盖 `shared/mapDocument/` 的核心模块（65 个用例），组件层尚未测试。
 - 高德底图需要用户自己的 Key。
 - 无 LICENSE（公开部署前补充）。
 

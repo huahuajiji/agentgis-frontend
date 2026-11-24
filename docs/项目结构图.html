@@ -265,11 +265,11 @@
     <p class="g-title">shared/ — 纯函数与引擎隔离（store 之下）</p>
     <div class="row">
       <div class="box state" style="flex:2;min-width:380px">
-        <b>shared/mapDocument/</b><span class="chip state">14 个模块</span>
-        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
+        <b>shared/mapDocument/</b><span class="chip state">15 个模块</span>
+        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentIdb（IndexedDB）· mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
-        <b>shared/mapDocument/__tests__/</b><span class="chip state">46 例 · Vitest</span>
+        <b>shared/mapDocument/__tests__/</b><span class="chip state">65 例 · Vitest</span>
         <small>撤销/重做 9 例 · 操作压缩 16 例 · GeoJSON 收发 21 例 · fixtures.ts 共用夹具</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
@@ -290,7 +290,7 @@
     </div>
     <div class="box state" style="flex:1;min-width:240px">
       <b>Persistence</b>
-      <small>localStorage · mapDocumentPersistence.ts（阶段 3 换后端时替换这一层）</small>
+      <small>IndexedDB（idb）· mapDocumentIdb.ts 存储层 + mapDocumentPersistence.ts 编排（2a）</small>
     </div>
     <div class="box state" style="flex:1;min-width:220px">
       <b>外部依赖</b>
@@ -309,7 +309,7 @@
     <tr><td>左栏 · 数据区</td><td>GeoJSON 导入 / 导出</td><td><span class="st real">真实现</span></td><td class="mono">GeoJsonTransferPanel.vue</td></tr>
     <tr><td>左栏 · 地图区</td><td>空态说明文案</td><td><span class="st real">真实现</span></td><td>「这个区暂时没有面板」</td></tr>
     <tr><td rowspan="2">右栏检查器</td><td>要素</td><td><span class="st real">真实现</span></td><td class="mono">LayerFeatureTree + FeaturePropertyTable</td></tr>
-    <tr><td>操作</td><td><span class="st real">真实现</span></td><td class="mono">OperationHistoryPanel（撤销/重做/提交）</td></tr>
+    <tr><td>操作</td><td><span class="st real">真实现</span></td><td class="mono">OperationHistoryPanel（撤销/重做/打包）</td></tr>
     <tr><td rowspan="3">已删除</td><td>13 个占位面板</td><td><span class="st removed">已删</span></td><td>视图设置、地图工具、版本、数据源、引用数据、导入队列、AI 对话、执行预览、上下文、执行记录、操作历史（左栏）、接口配置、偏好设置</td></tr>
     <tr><td>查找外部数据（半成品）</td><td><span class="st removed">已删</span></td><td>表单完整但按钮无响应；连同 50 行 POI 常量一起移除</td></tr>
     <tr><td>2 个占位页签</td><td><span class="st removed">已删</span></td><td>参考图层、AI 检查</td></tr>
@@ -374,7 +374,7 @@ flowchart TB
         ST1 --> ST3
         ST3 --> ST2
         ST3 --> T1
-        LS["localStorage · 当前唯一持久化（阶段 3 换后端）"]
+        LS["IndexedDB · 本地持久化（2a；2b 接后端 HTTP）"]
         ST3 --> LS
     end
 
