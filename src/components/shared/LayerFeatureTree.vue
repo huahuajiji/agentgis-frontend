@@ -241,7 +241,8 @@ function confirmDeleteLayer() {
         dragging: draggedLayerId === layer.id,
         reference: layer.role === 'reference',
         active: selectedLayerId === layer.id,
-        hidden: !layer.visible
+        hidden: !layer.visible,
+        'has-open-settings': settingsLayerId === layer.id
       }"
       :draggable="sorting"
       @dragstart="startDrag(layer.id)"

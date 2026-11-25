@@ -172,10 +172,21 @@ function normalizeImportedFeature(
   feature: GeoJsonFeature,
   metadata: { importedFeatureId: string; layerId: string }
 ): GeoJsonFeature {
+  const properties = { ...(feature.properties ?? {}) } as Record<string, unknown>;
+
+  // 导入命名规则（用户 2026-11-25）：有 name/name:xx 就用它；
+  // 否则用导入生成的要素 id 作为名字；不套用手绘的「点_1」自动编号。
+  if (typeof properties.name !== 'string' || !properties.name.trim()) {
+    const namedValue = ['name:zh', 'name_en', 'NAME', '名称', 'Name']
+      .map((key) => properties[key])
+      .find((value): value is string => typeof value === 'string' && Boolean(value.trim()));
+    properties.name = namedValue ?? metadata.importedFeatureId;
+  }
+
   return {
     ...feature,
     properties: {
-      ...(feature.properties ?? {}),
+      ...properties,
       agentgis_imported_feature_id: metadata.importedFeatureId,
       agentgis_layer_id: metadata.layerId
     }

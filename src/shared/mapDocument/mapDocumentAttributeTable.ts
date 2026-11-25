@@ -1,8 +1,8 @@
 /**
  * ArcGIS 式属性表（纯函数部分）。
  *
- * 一列 = 一个字段。固定列在前（名称 / 几何类型 / 属性数），
- * 然后是"该图层所有要素出现过的属性键"的并集，按出现顺序稳定排列。
+ * 公共字段 = 该图层**所有**要素都拥有的属性键（不含 name），作为表格列。
+ * 只有部分要素拥有的键属于"私有属性"，在左侧面板里按要素查看和编辑。
  */
 import type { MapFeature, MapLayer } from '../../schemas/mapDocumentSchema';
 
@@ -15,7 +15,7 @@ export type AttributeTableRow = {
 };
 
 export type AttributeTableModel = {
-  columns: string[];
+  commonColumns: string[];
   rows: AttributeTableRow[];
 };
 
@@ -26,41 +26,70 @@ export function featureDisplayName(feature: MapFeature): string {
     : feature.id;
 }
 
+function propertyKeys(feature: MapFeature): string[] {
+  return Object.keys(feature.geojson.properties ?? {}).filter((key) => key !== 'name');
+}
+
 /**
  * 构造图层的属性表。
  *
- * 字段并集按"要素顺序 + 每个要素内键出现顺序"去重累积，保证列顺序稳定，
- * 不会因为某个要素删了字段就抖动。
+ * 公共字段取所有要素属性键的交集，顺序以第一个要素的键顺序为准，
+ * 保证列顺序稳定，不随某个要素增删私有字段而抖动。
  */
 export function buildAttributeTable(
   layer: MapLayer,
   features: MapFeature[]
 ): AttributeTableModel {
   const layerFeatures = features.filter((feature) => feature.layerId === layer.id);
-  const columnSet = new Set<string>();
 
-  for (const feature of layerFeatures) {
-    const properties = feature.geojson.properties ?? {};
-    for (const key of Object.keys(properties)) {
-      if (key !== 'name') {
-        columnSet.add(key);
-      }
-    }
+  const orderedKeys = layerFeatures.flatMap((feature) => propertyKeys(feature));
+  const keyCounts = new Map<string, number>();
+  for (const key of orderedKeys) {
+    keyCounts.set(key, (keyCounts.get(key) ?? 0) + 1);
   }
+  const commonColumns = [...new Set(orderedKeys)].filter(
+    (key) => keyCounts.get(key) === layerFeatures.length
+  );
 
-  const columns = [...columnSet];
   const rows = layerFeatures.map((feature) => {
     const properties = (feature.geojson.properties ?? {}) as Record<string, unknown>;
     return {
       featureId: feature.id,
       name: featureDisplayName(feature),
       geometryType: feature.geojson.geometry.type,
-      propertyCount: Object.keys(properties).filter((key) => key !== 'name').length,
+      propertyCount: propertyKeys(feature).length,
       values: properties
     };
   });
 
-  return { columns, rows };
+  return { commonColumns, rows };
+}
+
+/** 把单个要素的属性按公共/私有两组拆开。 */
+export function splitFeatureProperties(
+  feature: MapFeature,
+  commonColumns: string[]
+): {
+  common: Record<string, unknown>;
+  private: Record<string, unknown>;
+} {
+  const properties = (feature.geojson.properties ?? {}) as Record<string, unknown>;
+  const commonSet = new Set(commonColumns);
+  const common: Record<string, unknown> = {};
+  const privateProps: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(properties)) {
+    if (key === 'name') {
+      continue;
+    }
+    if (commonSet.has(key)) {
+      common[key] = value;
+    } else {
+      privateProps[key] = value;
+    }
+  }
+
+  return { common, private: privateProps };
 }
 
 /** 单元格展示文本；null/undefined 显示空串，对象转 JSON。 */

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { nextFeatureName } from '../mapDocumentNaming';
-import { buildAttributeTable, featureDisplayName, formatCellValue, parseCellValue } from '../mapDocumentAttributeTable';
+import {
+  buildAttributeTable,
+  featureDisplayName,
+  formatCellValue,
+  parseCellValue,
+  splitFeatureProperties
+} from '../mapDocumentAttributeTable';
 import type { MapFeature, MapLayer } from '../../../schemas/mapDocumentSchema';
 
 function makeLayer(overrides: Partial<MapLayer> = {}): MapLayer {
@@ -77,7 +83,7 @@ describe('nextFeatureName', () => {
 });
 
 describe('buildAttributeTable', () => {
-  it('列是属性键并集（不含 name），顺序稳定去重', () => {
+  it('公共列是所有要素属性键的交集（不含 name）', () => {
     const layer = makeLayer({ featureIds: ['f1', 'f2'] });
     const features = [
       makeFeature('f1', 'layer-1', 'Point', { name: '点_1', population: 120 }),
@@ -86,11 +92,18 @@ describe('buildAttributeTable', () => {
 
     const table = buildAttributeTable(layer, features);
 
-    expect(table.columns).toEqual(['population', 'area']);
+    // area 只有 f2 有 → 私有，不进公共列
+    expect(table.commonColumns).toEqual(['population']);
     expect(table.rows).toHaveLength(2);
     expect(table.rows[0].name).toBe('点_1');
     expect(table.rows[0].values.population).toBe(120);
     expect(table.rows[1].values.area).toBe(1.5);
+  });
+
+  it('所有要素都没有属性时公共列为空', () => {
+    const layer = makeLayer();
+    const features = [makeFeature('f1', 'layer-1', 'Point', { name: '点_1' })];
+    expect(buildAttributeTable(layer, features).commonColumns).toEqual([]);
   });
 
   it('属性数不含 name', () => {
@@ -112,6 +125,23 @@ describe('buildAttributeTable', () => {
     const layer = makeLayer();
     const features = [makeFeature('feature-abc', 'layer-1', 'Point', {})];
     expect(buildAttributeTable(layer, features).rows[0].name).toBe('feature-abc');
+  });
+});
+
+describe('splitFeatureProperties', () => {
+  it('按公共列拆分，name 两边都不出现', () => {
+    const feature = makeFeature('f1', 'layer-1', 'Point', {
+      name: '点_1',
+      population: 10,
+      note: '私有'
+    });
+
+    const split = splitFeatureProperties(feature, ['population']);
+
+    expect(split.common).toEqual({ population: 10 });
+    expect(split.private).toEqual({ note: '私有' });
+    expect('name' in split.common).toBe(false);
+    expect('name' in split.private).toBe(false);
   });
 });
 

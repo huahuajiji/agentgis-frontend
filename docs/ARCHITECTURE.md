@@ -72,7 +72,7 @@
 | mapDocumentRemote | 后端 HTTP 客户端：五个 CRUD 端点 + /health，超时与错误归一化 |
 | mapDocumentSync | 同步纯函数：上传 payload 剥离、后端→本地转换、拉取计划、错误翻译 |
 | mapDocumentNaming | 手绘要素自动命名（点_1/线_1/面_1，图层+类型计数） |
-| mapDocumentAttributeTable | 属性表纯函数：字段并集列、行数据、单元格解析 |
+| mapDocumentAttributeTable | 属性表纯函数：公共字段交集列、私有属性拆分、单元格解析 |
 | mapDocumentIdb | IndexedDB 存储层（`idb` 库）：文档按 id 分条 + 草稿 + 元数据，增量写入 |
 | mapDocumentMigration | 旧数据迁移 |
 | mapDocumentDraftValidation | 草稿要素目标校验 |
