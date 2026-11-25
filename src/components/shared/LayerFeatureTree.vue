@@ -2,7 +2,6 @@
 import { computed, ref, watch } from 'vue';
 import { useMapDocumentStore, type LayerRole, type MapFeature, type MapLayer } from '../../stores/mapDocumentStore';
 import ConfirmActionDialog from './ConfirmActionDialog.vue';
-import FeaturePropertyTable from './FeaturePropertyTable.vue';
 import TextInputDialog from './TextInputDialog.vue';
 
 const props = withDefaults(defineProps<{
@@ -13,7 +12,13 @@ const props = withDefaults(defineProps<{
   sorting: false
 });
 
+const emit = defineEmits<{
+  'open-attribute-table': [layer: MapLayer];
+  'close-attribute-table': [layerId: string];
+}>();
+
 const mapDocumentStore = useMapDocumentStore();
+const settingsLayerId = ref<string | null>(null);
 const openLayers = ref<Set<string>>(new Set());
 const layerOrder = ref<string[]>([]);
 const draggedLayerId = ref<string | null>(null);
@@ -59,7 +64,6 @@ watch(
 );
 
 const selectedLayerId = computed(() => mapDocumentStore.activeDocument.selectedLayerId);
-const selectedFeatureId = computed(() => mapDocumentStore.activeDocument.selectedFeatureId);
 const selectedActionLayerSummary = computed(() => {
   if (!selectedActionLayer.value) {
     return [];
@@ -110,36 +114,28 @@ function getLayerFeatures(layer: MapLayer): MapFeature[] {
     .filter((feature): feature is MapFeature => Boolean(feature));
 }
 
-function getFeatureName(feature: MapFeature) {
-  const properties = feature.geojson.properties;
-  const value = properties && typeof properties.name === 'string'
-    ? properties.name
-    : feature.id;
-  return value;
-}
-
-function toggleLayer(layerId: string) {
+function toggleLayer(layer: MapLayer) {
   if (props.sorting) {
     return;
   }
 
-  mapDocumentStore.selectLayer(layerId);
+  const willOpen = !openLayers.value.has(layer.id);
+  mapDocumentStore.selectLayer(layer.id);
 
   const next = new Set(openLayers.value);
-  if (next.has(layerId)) {
-    next.delete(layerId);
+  if (willOpen) {
+    next.add(layer.id);
   } else {
-    next.add(layerId);
+    next.delete(layer.id);
   }
   openLayers.value = next;
-}
 
-function toggleFeature(featureId: string) {
-  if (props.sorting) {
-    return;
+  // 用户 2026-11-25：展开图层 → 在地图上弹出属性表；收起 → 关闭。
+  if (willOpen) {
+    emit('open-attribute-table', layer);
+  } else {
+    emit('close-attribute-table', layer.id);
   }
-
-  mapDocumentStore.selectFeature(selectedFeatureId.value === featureId ? null : featureId);
 }
 
 function startDrag(layerId: string) {
@@ -181,6 +177,16 @@ function toggleLayerVisible(layer: MapLayer, event: Event) {
   }
 
   mapDocumentStore.setLayerVisible(layer.id, !layer.visible);
+}
+
+function toggleSettings(layer: MapLayer, event: Event) {
+  event.stopPropagation();
+  settingsLayerId.value = settingsLayerId.value === layer.id ? null : layer.id;
+}
+
+/** 点击面板其它位置时收起设置菜单。 */
+function closeSettings() {
+  settingsLayerId.value = null;
 }
 
 function openRenameLayerDialog(layer: MapLayer, event: Event) {
@@ -226,7 +232,7 @@ function confirmDeleteLayer() {
 </script>
 
 <template>
-  <div v-if="orderedLayers.length" class="layer-tree" :class="{ 'is-sorting': sorting }">
+  <div v-if="orderedLayers.length" class="layer-tree" :class="{ 'is-sorting': sorting }" @click="closeSettings">
     <section
       v-for="layer in orderedLayers"
       :key="layer.id"
@@ -245,7 +251,7 @@ function confirmDeleteLayer() {
       @drop.prevent="endDrag"
     >
       <div class="layer-tree-head">
-        <button class="layer-tree-toggle" type="button" @click="toggleLayer(layer.id)">
+        <button class="layer-tree-toggle" type="button" @click="toggleLayer(layer)">
           <span>{{ sorting ? '↕' : openLayers.has(layer.id) ? '▾' : '▸' }}</span>
           <span class="layer-title">
             <b>{{ layer.name }}</b>
@@ -263,45 +269,33 @@ function confirmDeleteLayer() {
           >
             {{ layer.visible ? '显' : '隐' }}
           </button>
-          <button
-            class="layer-action-button"
-            type="button"
-            title="重命名图层"
-            @click="openRenameLayerDialog(layer, $event)"
-          >
-            改
-          </button>
-          <button
-            class="layer-action-button danger"
-            type="button"
-            title="删除图层"
-            @click="openDeleteLayerDialog(layer, $event)"
-          >
-            删
-          </button>
+          <div class="layer-settings">
+            <button
+              class="layer-action-button"
+              type="button"
+              title="图层设置"
+              :aria-expanded="settingsLayerId === layer.id"
+              @click.stop="toggleSettings(layer, $event)"
+            >
+              ⋯
+            </button>
+            <div v-if="settingsLayerId === layer.id" class="layer-settings-menu" @click.stop>
+              <button type="button" @click="openRenameLayerDialog(layer, $event)">重命名图层</button>
+              <button class="danger" type="button" @click="openDeleteLayerDialog(layer, $event)">删除图层</button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div v-if="!sorting && openLayers.has(layer.id)" class="layer-tree-body">
-        <div v-for="feature in getLayerFeatures(layer)" :key="feature.id" class="feature-node">
-          <button
-            class="feature-row"
-            :class="{ active: selectedFeatureId === feature.id }"
-            type="button"
-            @click="toggleFeature(feature.id)"
-          >
-            <span class="feature-dot">•</span>
-            <span>{{ getFeatureName(feature) }}</span>
-            <small>{{ feature.geojson.geometry.type }}</small>
-          </button>
-
-          <div v-if="selectedFeatureId === feature.id" class="feature-inline-inspector">
-            <FeaturePropertyTable
-              :feature="feature"
-              :layer="layer"
-            />
-          </div>
-        </div>
+        <button
+          class="layer-open-table"
+          type="button"
+          title="在当前地图上打开属性表"
+          @click="emit('open-attribute-table', layer)"
+        >
+          打开属性表 · {{ getLayerFeatures(layer).length }} 个要素
+        </button>
 
         <div v-if="!getLayerFeatures(layer).length" class="empty-state compact">
           <b>暂无要素</b>

@@ -3,10 +3,14 @@ import { computed } from 'vue';
 import AmapBaseMap from './AmapBaseMap.vue';
 import MapBoundsFrame from './MapBoundsFrame.vue';
 import MapCommandBar from './MapCommandBar.vue';
+import AttributeTableFloat from '../shared/AttributeTableFloat.vue';
 import type { MapAction, MapMode, MapTool } from '../../types';
+import type { MapLayer } from '../../stores/mapDocumentStore';
 
 const props = defineProps<{
   geometryEditFeatureId: string | null;
+  attributeTableLayer: MapLayer | null;
+  showAttributeTable: boolean;
 }>();
 
 const mode = defineModel<MapMode>('mode', { required: true });
@@ -14,6 +18,7 @@ const tool = defineModel<MapTool>('tool', { required: true });
 const mapAction = defineModel<MapAction>('mapAction', { required: true });
 const emit = defineEmits<{
   saveDraft: [];
+  closeAttributeTable: [];
 }>();
 
 const mapLabel = computed(() => {
@@ -39,6 +44,12 @@ const drawingEnabled = computed(() => mode.value === '编辑' && tool.value === 
         :status-text="mapLabel"
       />
       <MapBoundsFrame />
+      <AttributeTableFloat
+        v-if="showAttributeTable"
+        :layer="attributeTableLayer"
+        :open="Boolean(attributeTableLayer)"
+        @close="emit('closeAttributeTable')"
+      />
     </section>
   </section>
 </template>

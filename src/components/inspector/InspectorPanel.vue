@@ -4,6 +4,7 @@ import { INSPECTOR_TABS, type InspectorMode } from '../../types';
 import { useMapDocumentStore, type LayerGeometryType, type LayerRole } from '../../stores/mapDocumentStore';
 import InspectorSearch from './InspectorSearch.vue';
 import LayerCreateDialog from '../shared/LayerCreateDialog.vue';
+import type { MapLayer } from '../../stores/mapDocumentStore';
 import LayerFeatureTree from '../shared/LayerFeatureTree.vue';
 import OperationHistoryPanel from '../shared/OperationHistoryPanel.vue';
 
@@ -11,6 +12,11 @@ const mode = defineModel<InspectorMode>('mode', { required: true });
 
 defineProps<{
   collapsed: boolean;
+}>();
+
+const emit = defineEmits<{
+  'open-attribute-table': [layer: MapLayer];
+  'close-attribute-table': [layerId: string];
 }>();
 
 const activeTab = computed(() => INSPECTOR_TABS.find((item) => item.id === mode.value) ?? INSPECTOR_TABS[0]);
@@ -85,6 +91,8 @@ function createLayer(input: { name: string; geometryType: LayerGeometryType }) {
             v-if="activeTab.content === 'layer-tree'"
             :variant="activeLayerRole"
             :sorting="sortingLayers"
+            @open-attribute-table="emit('open-attribute-table', $event)"
+            @close-attribute-table="emit('close-attribute-table', $event)"
           />
           <OperationHistoryPanel v-else-if="activeTab.content === 'operation-history'" />
         </div>

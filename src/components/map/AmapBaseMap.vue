@@ -16,6 +16,7 @@ import {
   validateDraftFeatureForLayer,
   validateDraftTargetLayer
 } from '../../shared/mapDocument/mapDocumentDraftValidation';
+import { nextFeatureName } from '../../shared/mapDocument/mapDocumentNaming';
 import {
   useMapDocumentStore,
   type LngLat,
@@ -227,9 +228,38 @@ function submitDrawingDrafts() {
     return;
   }
 
+  const targetLayer = layer;
+  function applyAutoFeatureName(geojson: unknown, layerId: string) {
+    const feature = geojson as { geometry?: { type?: string }; properties?: Record<string, unknown> | null };
+    const geometryType = feature?.geometry?.type;
+    if (!geometryType) {
+      return geojson as never;
+    }
+    const resolvedLayer = layerId === targetLayer.id
+      ? targetLayer
+      : mapDocumentStore.activeDocument.layers.find((item) => item.id === layerId) ?? targetLayer;
+    const name = nextFeatureName(
+      resolvedLayer,
+      Object.values(mapDocumentStore.activeDocument.features),
+      geometryType
+    );
+    return {
+      ...feature,
+      properties: {
+        ...(feature.properties ?? {}),
+        name
+      }
+    } as never;
+  }
+
   const result = drawingSession.value?.submitDrafts({
     layerId: layer.id,
-    addFeature: ({ geojson, layerId }) => mapDocumentStore.addFeature({ geojson, layerId }),
+    addFeature: ({ geojson, layerId }) => {
+      // 手绘要素自动命名：点_1 / 线_1 / 面_1（图层内同类型最大序号 + 1）。
+      // 每次提交时现算：同一批草稿里的前一个刚写进文档，会自然进入统计。
+      const named = applyAutoFeatureName(geojson, layerId);
+      return mapDocumentStore.addFeature({ geojson: named, layerId });
+    },
     validate: ({ draft, geojson }) => {
       const validation = validateDraftFeatureForLayer(layer, draft.geometry, geojson);
       return validation.ok ? null : validation.reason;

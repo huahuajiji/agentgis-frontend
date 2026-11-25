@@ -1602,151 +1602,17 @@ button:disabled {
   padding: 0 10px 10px 36px;
 }
 
-.feature-node {
-  display: grid;
-  gap: 0;
-}
 
-.feature-row {
-  min-height: 35px;
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  border: 1px dashed var(--line-strong);
-  border-radius: 6px;
-  background: rgba(255, 254, 250, .62);
-  color: var(--text);
-  padding: 0 8px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 800;
-}
 
-.feature-row.active {
-  border-style: solid;
-  border-color: var(--accent);
-  border-bottom-color: var(--line);
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-  background: var(--surface);
-}
 
-.feature-dot {
-  color: var(--muted);
-}
 
-.feature-row small {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-}
 
-.feature-inline-inspector {
-  display: grid;
-  width: 100%;
-}
 
-.feature-inline-inspector .detail-card {
-  width: 100%;
-  border-top: 0;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
 
-.feature-property-card .detail-body {
-  display: grid;
-  gap: 8px;
-}
 
-.property-table {
-  display: grid;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface);
-  overflow: hidden;
-}
 
-.property-row {
-  min-width: 0;
-  min-height: 32px;
-  display: grid;
-  grid-template-columns: minmax(58px, .85fr) minmax(0, 1fr) 30px;
-  border-bottom: 1px solid var(--line);
-}
 
-.property-row:last-child {
-  border-bottom: 0;
-}
 
-.property-row input {
-  min-width: 0;
-  width: 100%;
-  height: 32px;
-  border: 0;
-  border-right: 1px solid var(--line);
-  outline: 0;
-  background: var(--surface);
-  color: var(--text);
-  padding: 0 7px;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.property-row input::placeholder {
-  color: var(--muted);
-}
-
-.property-head {
-  min-height: 28px;
-  background: #e7e4dc;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.property-head span {
-  display: flex;
-  align-items: center;
-  border-right: 1px solid var(--line);
-  padding: 0 7px;
-}
-
-.property-head span:last-child {
-  border-right: 0;
-}
-
-.property-add-row input {
-  background: #fbfaf5;
-}
-
-.property-action-button {
-  min-width: 0;
-  width: 30px;
-  min-height: 32px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  background: var(--surface);
-  color: var(--accent);
-  padding: 0;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.property-action-button.danger {
-  color: #8b352c;
-}
-
-.property-action-button:hover {
-  background: var(--surface-soft);
-}
-
-.feature-property-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
 
 .operation-history-panel {
   display: grid;
@@ -1942,4 +1808,207 @@ button:disabled {
   font-size: 11px;
   font-weight: 800;
   line-height: 1.45;
+}
+
+/* ── 图层设置菜单（⋯） ─────────────────────────────── */
+.layer-settings {
+  position: relative;
+}
+
+.layer-settings-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  min-width: 132px;
+  display: grid;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(37, 33, 22, .14);
+  padding: 4px;
+  gap: 2px;
+}
+
+.layer-settings-menu button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.layer-settings-menu button:hover {
+  background: var(--accent-soft);
+}
+
+.layer-settings-menu button.danger {
+  color: #8b352c;
+}
+
+.layer-open-table {
+  width: 100%;
+  min-height: 30px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 6px;
+  background: rgba(255, 254, 250, .62);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.layer-open-table:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── 浮动属性表 ─────────────────────────────────── */
+.attribute-table-float {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 12;
+  width: min(62%, 720px);
+  max-width: calc(100% - 40px);
+  max-height: 46%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 14px 40px rgba(37, 33, 22, .22);
+  overflow: hidden;
+}
+
+.attribute-table-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--accent-soft);
+  cursor: grab;
+  user-select: none;
+}
+
+.attribute-table-head b {
+  font-size: 12px;
+}
+
+.drag-grip {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: -2px;
+}
+
+.attribute-table-count {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.attribute-table-close {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.attribute-table-close:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.attribute-table-scroll {
+  overflow: auto;
+}
+
+.attribute-table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 11px;
+}
+
+.attribute-table th,
+.attribute-table td {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.attribute-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--accent-soft);
+  color: var(--muted);
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.attribute-table td {
+  height: 28px;
+  padding: 0 8px;
+}
+
+.attribute-table tbody tr:hover {
+  background: rgba(227, 235, 223, .45);
+}
+
+.attribute-table tbody tr.is-selected {
+  background: var(--accent-soft);
+}
+
+.attribute-table td input {
+  min-width: 88px;
+  width: 100%;
+  height: 27px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.attribute-table td input:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.attribute-table .col-type,
+.attribute-table .col-count {
+  color: var(--muted);
+}
+
+.attribute-table .col-action {
+  width: 40px;
+  text-align: center;
+}
+
+.attribute-table-delete {
+  border: 0;
+  background: transparent;
+  color: #8b352c;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.attribute-table-empty {
+  color: var(--muted);
+  padding: 10px 8px;
+  white-space: normal;
 }
