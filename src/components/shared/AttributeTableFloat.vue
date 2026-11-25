@@ -59,6 +59,13 @@ const detailSplit = computed(() => {
 });
 
 const detailPrivateEntries = computed(() => Object.entries(detailSplit.value.private));
+
+/** 关闭整个面板：退出私有面板、清掉选中、通知父组件。 */
+function closePanel() {
+  detailFeatureId.value = null;
+  mapDocumentStore.selectFeature(null);
+  emit('close');
+}
 const detailCommonEntries = computed(() => Object.entries(detailSplit.value.common));
 
 function toggleDetail(featureId: string) {
@@ -324,7 +331,7 @@ watch(detailFeatureId, () => {
           type="button"
           title="关闭属性表"
           @pointerdown.stop
-          @click="emit('close')"
+          @click="closePanel"
         >×</button>
       </header>
 

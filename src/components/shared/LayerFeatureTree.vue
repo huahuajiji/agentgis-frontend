@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useMapDocumentStore, type LayerRole, type MapFeature, type MapLayer } from '../../stores/mapDocumentStore';
 import ConfirmActionDialog from './ConfirmActionDialog.vue';
 import TextInputDialog from './TextInputDialog.vue';
@@ -119,23 +119,17 @@ function toggleLayer(layer: MapLayer) {
     return;
   }
 
-  const willOpen = !openLayers.value.has(layer.id);
+  // 用户 2026-11-26：展开图层只展开，不再自动打开属性表；
+  // 属性表由「打开属性表」按钮显式触发。
   mapDocumentStore.selectLayer(layer.id);
 
   const next = new Set(openLayers.value);
-  if (willOpen) {
-    next.add(layer.id);
-  } else {
+  if (next.has(layer.id)) {
     next.delete(layer.id);
+  } else {
+    next.add(layer.id);
   }
   openLayers.value = next;
-
-  // 用户 2026-11-25：展开图层 → 在地图上弹出属性表；收起 → 关闭。
-  if (willOpen) {
-    emit('open-attribute-table', layer);
-  } else {
-    emit('close-attribute-table', layer.id);
-  }
 }
 
 function startDrag(layerId: string) {
@@ -179,10 +173,61 @@ function toggleLayerVisible(layer: MapLayer, event: Event) {
   mapDocumentStore.setLayerVisible(layer.id, !layer.visible);
 }
 
+/**
+ * 设置菜单用 position: fixed 渲染（挂到 body 层级不受滚动容器裁剪）。
+ * 位置由按钮的 getBoundingClientRect 算出，滚动/缩放时重新计算或直接关闭。
+ */
+const settingsMenuStyle = ref<{ top: string; left: string; minWidth: string }>({ top: '0px', left: '0px', minWidth: '132px' });
+const settingsAnchor = ref<HTMLElement | null>(null);
+
+function positionSettingsMenu(button: HTMLElement | null) {
+  if (!button) {
+    return;
+  }
+  const rect = button.getBoundingClientRect();
+  const menuWidth = 140;
+  const left = Math.max(8, Math.min(window.innerWidth - menuWidth - 8, rect.right - menuWidth));
+  settingsMenuStyle.value = {
+    top: `${rect.bottom + 4}px`,
+    left: `${left}px`,
+    minWidth: `${menuWidth}px`
+  };
+}
+
 function toggleSettings(layer: MapLayer, event: Event) {
   event.stopPropagation();
-  settingsLayerId.value = settingsLayerId.value === layer.id ? null : layer.id;
+  if (settingsLayerId.value === layer.id) {
+    settingsLayerId.value = null;
+    return;
+  }
+  settingsLayerId.value = layer.id;
+  settingsAnchor.value = event.currentTarget as HTMLElement;
+  positionSettingsMenu(settingsAnchor.value);
 }
+
+function repositionSettings() {
+  if (settingsLayerId.value) {
+    positionSettingsMenu(settingsAnchor.value);
+  }
+}
+
+function closeSettingsOnEscape(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    settingsLayerId.value = null;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('resize', repositionSettings);
+  window.addEventListener('scroll', repositionSettings, true);
+  window.addEventListener('keydown', closeSettingsOnEscape);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', repositionSettings);
+  window.removeEventListener('scroll', repositionSettings, true);
+  window.removeEventListener('keydown', closeSettingsOnEscape);
+});
 
 /** 点击面板其它位置时收起设置菜单。 */
 function closeSettings() {
@@ -241,8 +286,7 @@ function confirmDeleteLayer() {
         dragging: draggedLayerId === layer.id,
         reference: layer.role === 'reference',
         active: selectedLayerId === layer.id,
-        hidden: !layer.visible,
-        'has-open-settings': settingsLayerId === layer.id
+        hidden: !layer.visible
       }"
       :draggable="sorting"
       @dragstart="startDrag(layer.id)"
@@ -270,21 +314,15 @@ function confirmDeleteLayer() {
           >
             {{ layer.visible ? '显' : '隐' }}
           </button>
-          <div class="layer-settings">
-            <button
-              class="layer-action-button"
-              type="button"
-              title="图层设置"
-              :aria-expanded="settingsLayerId === layer.id"
-              @click.stop="toggleSettings(layer, $event)"
-            >
-              ⋯
-            </button>
-            <div v-if="settingsLayerId === layer.id" class="layer-settings-menu" @click.stop>
-              <button type="button" @click="openRenameLayerDialog(layer, $event)">重命名图层</button>
-              <button class="danger" type="button" @click="openDeleteLayerDialog(layer, $event)">删除图层</button>
-            </div>
-          </div>
+          <button
+            class="layer-action-button"
+            type="button"
+            title="图层设置"
+            :aria-expanded="settingsLayerId === layer.id"
+            @click.stop="toggleSettings(layer, $event)"
+          >
+            ⋯
+          </button>
         </div>
       </div>
 
@@ -309,6 +347,28 @@ function confirmDeleteLayer() {
   <div v-else class="empty-state">
     <b>暂无图层</b>
     <span>当前 MapDocument 里没有这个类型的图层。</span>
+  </div>
+
+  <!-- 设置菜单：fixed 定位，不受任何滚动容器/overflow 裁剪 -->
+  <div
+    v-if="settingsLayerId"
+    class="layer-settings-menu layer-settings-menu-fixed"
+    :style="settingsMenuStyle"
+    @click.stop
+  >
+    <button
+      type="button"
+      @click="openRenameLayerDialog(orderedLayers.find((item) => item.id === settingsLayerId)!, $event)"
+    >
+      重命名图层
+    </button>
+    <button
+      class="danger"
+      type="button"
+      @click="openDeleteLayerDialog(orderedLayers.find((item) => item.id === settingsLayerId)!, $event)"
+    >
+      删除图层
+    </button>
   </div>
 
   <TextInputDialog
