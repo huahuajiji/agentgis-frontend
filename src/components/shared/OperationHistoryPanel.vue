@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useMapDocumentStore } from '../../stores/mapDocumentStore';
+import { useMapDocumentStore, type PullOverwriteRisk } from '../../stores/mapDocumentStore';
+import ConfirmActionDialog from './ConfirmActionDialog.vue';
 import ExternalOperationCard from './ExternalOperationCard.vue';
 import OperationCard from './OperationCard.vue';
 import OperationStack from './OperationStack.vue';
@@ -83,8 +84,25 @@ async function syncToRemote() {
   await mapDocumentStore.syncActiveDocumentToRemote();
 }
 
+// 拉取覆盖保护：预检发现风险时暂存，弹确认框；确认后带名单重跑。
+const pullOverwrites = ref<PullOverwriteRisk[]>([]);
+const pullConfirmOpen = ref(false);
+const pullConfirmRows = computed(() => pullOverwrites.value.map((item) => ({
+  label: item.documentName,
+  value: `${item.pendingCount} 个待同步操作`
+})));
+
 async function pullFromRemote() {
-  await mapDocumentStore.pullFromRemote();
+  const outcome = await mapDocumentStore.pullFromRemote();
+  if (outcome.status === 'needs-confirmation') {
+    pullOverwrites.value = outcome.overwrites;
+    pullConfirmOpen.value = true;
+  }
+}
+
+async function confirmPullOverwrite() {
+  await mapDocumentStore.pullFromRemote(pullOverwrites.value.map((item) => item.remoteId));
+  pullOverwrites.value = [];
 }
 </script>
 
@@ -262,5 +280,16 @@ async function pullFromRemote() {
         <span>AI、后端或文件导入给出的操作意图会先放在这里，匹配成功后才和内部历史对上。</span>
       </div>
     </section>
+
+    <ConfirmActionDialog
+      v-model:open="pullConfirmOpen"
+      dialog-id="pull-overwrite-confirm"
+      title="云端版本将覆盖本地待同步操作"
+      description="以下文档本地还有未上传到云端的修改，继续拉取会丢弃它们。"
+      confirm-text="仍要覆盖"
+      danger
+      :summary-rows="pullConfirmRows"
+      @confirm="confirmPullOverwrite"
+    />
   </div>
 </template>

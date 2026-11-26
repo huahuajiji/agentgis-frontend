@@ -102,6 +102,38 @@ function isRemoteNewer(remoteUpdatedAt: string, localUpdatedAt: string) {
   return remoteTime > localTime;
 }
 
+/**
+ * 拉取覆盖保护（第三刀前置 0）。
+ *
+ * 找出"这次拉取会被云端覆盖，且本地待同步池非空"的文档——覆盖它们等于
+ * 悄悄丢掉用户还没上传的修改。调用方应弹确认框，用户拒绝的从下载列表里剔除。
+ */
+export function findPullOverwrites(
+  documentsById: Record<string, SavedMapDocument>,
+  pullRemoteIds: string[]
+): Array<{ remoteId: string; localDocumentId: string; documentName: string; pendingCount: number }> {
+  const byRemoteId = new Map<string, SavedMapDocument>();
+  for (const document of Object.values(documentsById)) {
+    if (document.remoteId) {
+      byRemoteId.set(document.remoteId, document);
+    }
+  }
+
+  return pullRemoteIds.flatMap((remoteId) => {
+    const local = byRemoteId.get(remoteId);
+    const pendingCount = local?.edit.commitPool.length ?? 0;
+    if (!local || pendingCount === 0) {
+      return [];
+    }
+    return [{
+      remoteId,
+      localDocumentId: local.id,
+      documentName: local.name,
+      pendingCount
+    }];
+  });
+}
+
 /** 同步错误 → 界面用的中文人话。 */
 export function describeSyncError(error: unknown): string {
   if (error instanceof RemoteError) {

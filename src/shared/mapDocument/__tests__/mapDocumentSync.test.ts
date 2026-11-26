@@ -8,6 +8,7 @@ import { SavedMapDocumentSchema, type SavedMapDocument } from '../../../schemas/
 import {
   attachRemoteId,
   describeSyncError,
+  findPullOverwrites,
   fromRemoteDetail,
   planPull,
   toRemotePayload
@@ -139,5 +140,58 @@ describe('describeSyncError', () => {
 
   it('未知值给兜底文案', () => {
     expect(describeSyncError('what')).toBe('同步失败：未知错误');
+  });
+});
+
+describe('findPullOverwrites（覆盖保护）', () => {
+  it('待同步池非空的文档会被列出，池为空的不列', () => {
+    const withPending = makeSavedDocument({
+      id: 'map-1',
+      remoteId: 'doc-1'
+    });
+    const withPendingPool = SavedMapDocumentSchema.parse({
+      ...withPending,
+      edit: {
+        ...withPending.edit,
+        commitPool: [{
+          id: 'op-1',
+          createdAt: '2026-11-24T00:00:00.000Z',
+          source: 'user',
+          summary: '新建图层',
+          type: 'layer.create',
+          layerId: 'layer-1',
+          after: {
+            id: 'layer-1',
+            name: '图层一',
+            role: 'work',
+            geometryType: 'mixed',
+            visible: true,
+            locked: false,
+            order: 0,
+            featureIds: [],
+            style: {},
+            imageResources: []
+          }
+        }]
+      }
+    });
+    const clean = makeSavedDocument({ id: 'map-2', remoteId: 'doc-2' });
+
+    const risks = findPullOverwrites(
+      { 'map-1': withPendingPool, 'map-2': clean },
+      ['doc-1', 'doc-2']
+    );
+
+    expect(risks).toHaveLength(1);
+    expect(risks[0]).toMatchObject({
+      remoteId: 'doc-1',
+      localDocumentId: 'map-1',
+      documentName: '地图一',
+      pendingCount: 1
+    });
+  });
+
+  it('本地没有对应文档时不产生风险（纯新增拉取）', () => {
+    expect(findPullOverwrites({}, ['doc-new'])).toEqual([]);
   });
 });

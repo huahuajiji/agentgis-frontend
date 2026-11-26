@@ -94,6 +94,7 @@ import {
 import {
   attachRemoteId,
   describeSyncError,
+  findPullOverwrites,
   fromRemoteDetail,
   planPull,
   toRemotePayload
@@ -135,6 +136,19 @@ type AddExternalOperationInput = {
 type InternalActionOptions = {
   source?: MapOperationSource;
 };
+
+/** 拉取结果：needs-confirmation 时界面弹确认框，确认后带 confirmedRemoteIds 重跑。 */
+export type PullOverwriteRisk = {
+  remoteId: string;
+  localDocumentId: string;
+  documentName: string;
+  pendingCount: number;
+};
+
+export type PullOutcome =
+  | { status: 'done' }
+  | { status: 'error' }
+  | { status: 'needs-confirmation'; overwrites: PullOverwriteRisk[] };
 
 type ActiveMapDocument = DraftMapDocument | SavedMapDocument;
 type OperationInput = MapOperation extends infer Operation
@@ -1066,13 +1080,32 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
    * 流程：GET 列表 → 对"本地没有或远程更新"的文档逐个 GET 详情 →
    * Zod 校验 → 合并进 documentsById（本地 id 不变，remoteId 补齐）。
    * 本地较新的文档保留本地（最后写入者赢的对偶：以 updatedAt 晚者为准）。
+   *
+   * 覆盖保护：若待下载文档的本地待同步池非空，先返回 overwrite 列表让界面确认；
+   * 用户确认后把 `confirmedRemoteIds` 传回来重跑，未确认的文档跳过不覆盖。
    */
-  async function pullFromRemote(): Promise<boolean> {
+  async function pullFromRemote(confirmedRemoteIds?: string[]): Promise<PullOutcome> {
     setSyncResult('syncing', '正在从云端拉取…');
     try {
       await remoteHealth();
       const metas = await listRemoteDocuments();
-      const remoteIds = planPull(state.value.documentsById, metas);
+      let remoteIds = planPull(state.value.documentsById, metas);
+
+      if (confirmedRemoteIds === undefined) {
+        // 第一轮：预检覆盖风险。
+        const overwrites = findPullOverwrites(state.value.documentsById, remoteIds);
+        if (overwrites.length) {
+          setSyncResult('idle', `有 ${overwrites.length} 份文档的本地待同步操作会被云端覆盖，等待确认`);
+          return { status: 'needs-confirmation', overwrites };
+        }
+      } else {
+        // 第二轮：剔除未确认的文档，其余照常下载。
+        const confirmed = new Set(confirmedRemoteIds);
+        const overwrites = findPullOverwrites(state.value.documentsById, remoteIds);
+        remoteIds = remoteIds.filter((remoteId) => (
+          !overwrites.some((item) => item.remoteId === remoteId) || confirmed.has(remoteId)
+        ));
+      }
 
       for (const remoteId of remoteIds) {
         const detail = await getRemoteDocument(remoteId);
@@ -1107,10 +1140,10 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
       setSyncResult('idle', remoteIds.length
         ? `已从云端拉取 ${remoteIds.length} 份文档`
         : '云端没有新内容');
-      return true;
+      return { status: 'done' };
     } catch (error) {
       setSyncResult('error', describeSyncError(error));
-      return false;
+      return { status: 'error' };
     }
   }
 
