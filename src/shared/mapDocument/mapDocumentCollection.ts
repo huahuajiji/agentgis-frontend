@@ -42,6 +42,7 @@ export function createDraftDocument(viewport: MapViewport): DraftMapDocument {
     features: {},
     selectedLayerId: null,
     selectedFeatureId: null,
+    crs: 'wgs84',
     edit: createEmptyEditState()
   });
 }
@@ -82,6 +83,7 @@ export function createMap(
     features: {},
     selectedLayerId: null,
     selectedFeatureId: null,
+    crs: 'wgs84',
     edit: createEmptyEditState()
   });
 

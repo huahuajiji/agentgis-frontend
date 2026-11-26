@@ -20,6 +20,7 @@ import {
   createDraftDocument,
   createEmptyEditState
 } from './mapDocumentCollection';
+import { migrateDocumentToWgs84 } from './mapDocumentCrs';
 import {
   DEFAULT_WORKSPACE_ID,
   DRAFT_DOCUMENT_ID,
@@ -172,11 +173,20 @@ function normalizeDraftDocument(
     ...normalizeLayerFeatureCollections(document, 'draftDocument', notices),
     selectedLayerId: typeof document.selectedLayerId === 'string' ? document.selectedLayerId : null,
     selectedFeatureId: typeof document.selectedFeatureId === 'string' ? document.selectedFeatureId : null,
+    // 已有标记的文档必须带进候选，否则每次 hydrate 都会被当作旧 GCJ 数据重复转换。
+    crs: document.crs === 'wgs84' ? ('wgs84' as const) : undefined,
     edit: normalizeEditState(document.edit, 'draftDocument', notices)
   };
 
   const result = DraftMapDocumentSchema.safeParse(candidate);
-  return result.success ? result.data : createDraftDocument(candidate.viewport);
+  if (!result.success) {
+    return createDraftDocument(candidate.viewport);
+  }
+  // 方案 B：无 crs 标记的旧文档 = GCJ-02，这里统一转成 WGS-84。
+  if (!document.crs) {
+    pushNotice(notices, 'draftDocument', '坐标系方案 B：旧几何 GCJ-02 已转换为 WGS-84');
+  }
+  return migrateDocumentToWgs84(result.data);
 }
 
 function normalizeSavedDocuments(
@@ -218,6 +228,8 @@ function normalizeSavedDocuments(
       ...normalizeLayerFeatureCollections(document, scope, notices),
       selectedLayerId: typeof document.selectedLayerId === 'string' ? document.selectedLayerId : null,
       selectedFeatureId: typeof document.selectedFeatureId === 'string' ? document.selectedFeatureId : null,
+      // 同上：保留已有标记，防重复转换。
+      crs: document.crs === 'wgs84' ? ('wgs84' as const) : undefined,
       edit: normalizeEditState(document.edit, scope, notices)
     };
 
@@ -230,7 +242,12 @@ function normalizeSavedDocuments(
 
     const result = SavedMapDocumentSchema.safeParse(candidate);
     if (result.success) {
-      documents[result.data.id] = result.data;
+      // 方案 B：无 crs 标记的旧文档 = GCJ-02，转成 WGS-84 后再入集合。
+      const migrated = migrateDocumentToWgs84(result.data);
+      if (!document.crs) {
+        pushNotice(notices, scope, '坐标系方案 B：旧几何 GCJ-02 已转换为 WGS-84');
+      }
+      documents[migrated.id] = migrated;
     } else {
       pushNotice(notices, scope, `旧地图结构仍不兼容，已跳过：${result.error.issues[0]?.message ?? 'unknown error'}`);
     }

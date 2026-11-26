@@ -11,6 +11,7 @@ import {
   type AmapDrawGeometry
 } from '../../shared/amap/amapDrawingSession';
 import { AmapFeatureAdapter } from '../../shared/map/amapFeatureAdapter';
+import { gcj02ToWgs84, wgs84ToGcj02 } from '../../shared/geo/coordTransform';
 import {
   drawGeometryLabel,
   validateDraftFeatureForLayer,
@@ -150,7 +151,8 @@ function destroyMap() {
 }
 
 function readLngLat(lngLat: { getLng: () => number; getLat: () => number }): LngLat {
-  return [lngLat.getLng(), lngLat.getLat()];
+  // 方案 B：从高德读出的 GCJ-02 坐标转成文档统一存储的 WGS-84。
+  return gcj02ToWgs84(lngLat.getLng(), lngLat.getLat());
 }
 
 function readMapBounds(currentMap: AMapMapInstance): MapBounds {
@@ -170,7 +172,9 @@ function readMapViewport(currentMap: AMapMapInstance): MapViewport {
 }
 
 function applyViewportToMap(nextViewport: MapViewport) {
-  map.value?.setZoomAndCenter?.(nextViewport.zoom, nextViewport.center);
+  // 方案 B：文档 viewport 存 WGS-84，喂给高德前加偏为 GCJ-02。
+  const [centerLng, centerLat] = wgs84ToGcj02(nextViewport.center[0], nextViewport.center[1]);
+  map.value?.setZoomAndCenter?.(nextViewport.zoom, [centerLng, centerLat]);
 }
 
 function syncViewportFromMap() {
@@ -349,10 +353,11 @@ async function initMap() {
     }
 
     const initialViewport = mapDocumentStore.viewport;
+    const [initialLng, initialLat] = wgs84ToGcj02(initialViewport.center[0], initialViewport.center[1]);
     map.value = markRaw(new AMap.Map(container.value, {
       viewMode: '2D',
       zoom: initialViewport.zoom,
-      center: initialViewport.center,
+      center: [initialLng, initialLat],
       resizeEnable: true
     }));
 

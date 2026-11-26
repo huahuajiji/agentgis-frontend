@@ -194,6 +194,9 @@ const MapDocumentBaseSchema = z.object({
   features: z.record(z.string(), MapFeatureSchema),
   selectedLayerId: z.string().min(1).nullable(),
   selectedFeatureId: z.string().min(1).nullable(),
+  // 几何坐标系标记（方案 B，2026-11-26）：存在即为 WGS-84。
+  // 缺省 = 方案 B 之前的旧数据（实际为 GCJ-02），由迁移在 hydrate 时转换并补上此字段。
+  crs: z.literal('wgs84').optional(),
   edit: MapDocumentEditStateSchema
 });
 

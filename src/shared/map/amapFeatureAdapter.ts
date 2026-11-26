@@ -1,5 +1,6 @@
 import type { Geometry, Position } from 'geojson';
 import type { AMapMapInstance, AMapNamespace, AMapOverlayInstance } from '../amap/amapLoader';
+import { transformGeometry, wgs84ToGcj02 } from '../geo/coordTransform';
 import type { DraftMapDocument, MapFeature, MapLayer, SavedMapDocument } from '../../stores/mapDocumentStore';
 
 type MapDocumentLike = DraftMapDocument | SavedMapDocument;
@@ -74,7 +75,8 @@ export class AmapFeatureAdapter {
   }
 
   private createFeatureOverlays(layer: MapLayer, feature: MapFeature) {
-    const geometry = feature.geojson.geometry;
+    // 方案 B：文档几何存 WGS-84，交给高德渲染前统一加偏为 GCJ-02。
+    const geometry = transformGeometry(feature.geojson.geometry, wgs84ToGcj02);
     const zIndex = 100 + layer.order * 10;
     const overlays = this.createGeometryOverlays(geometry, layer, feature, zIndex);
 

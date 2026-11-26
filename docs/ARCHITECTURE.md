@@ -85,6 +85,7 @@
 | mapDocumentAttributeTable | 属性表纯函数：公共字段交集列、私有属性拆分、单元格解析 |
 | mapDocumentIdb | IndexedDB 存储层（`idb` 库）：文档按 id 分条 + 草稿 + 元数据，增量写入 |
 | mapDocumentMigration | 旧数据迁移 |
+| mapDocumentCrs | 坐标系方案 B：旧文档 GCJ-02 → WGS-84 一次性转换（幂等） |
 | mapDocumentDraftValidation | 草稿要素目标校验 |
 | mapDocumentEditValidation | 操作/提交/外部记录校验 |
 | mapDocumentValidation | 文档结构校验 |
@@ -103,6 +104,18 @@
 - `src/components/map/AmapBaseMap.vue`：画布容器，编排以上模块
 
 应用只有在开启 BYOK 且 JS API Key / Security Code 都存在时，才会尝试加载高德底图；否则地图区显示提示。
+
+### 坐标系（方案 B）
+
+文档几何与 viewport **一律存 WGS-84**；GCJ-02 只存在于高德 SDK 边界，共四处，全用 `src/shared/geo/coordTransform.ts` 的纯函数转换：
+
+| 边界 | 方向 |
+|---|---|
+| 绘制取点（`amapDraftGeometry.toPosition`） | GCJ → WGS |
+| 要素渲染（`amapFeatureAdapter`）、编辑覆盖物（`amapEditSession`） | WGS → GCJ |
+| viewport 读写（`AmapBaseMap` 的 getCenter/getBounds/setZoomAndCenter） | 双向 |
+
+文档带 `crs: 'wgs84'` 标记（可选字段）；无标记即方案 B 之前的旧数据，`mapDocumentMigration` 在加载时一次性把几何 + viewport 转成 WGS 并补上标记，过程幂等（二次 normalize 不再转换）。中国大陆境外不加偏，直通。`gcj02ToWgs84` 用"镜像初值 + 两次迭代"，往返误差压到 1e-9° 量级。
 
 ## 几何编辑目标
 

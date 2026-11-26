@@ -265,12 +265,12 @@
     <p class="g-title">shared/ — 纯函数与引擎隔离（store 之下）</p>
     <div class="row">
       <div class="box state" style="flex:2;min-width:380px">
-        <b>shared/mapDocument/</b><span class="chip state">19 个模块</span>
-        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentIdb（IndexedDB）· mapDocumentRemote（HTTP）· mapDocumentSync（同步纯函数）· mapDocumentNaming（要素命名）· mapDocumentAttributeTable（属性表）· mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
+        <b>shared/mapDocument/</b><span class="chip state">20 个模块</span>
+        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentIdb（IndexedDB）· mapDocumentRemote（HTTP）· mapDocumentSync（同步纯函数）· mapDocumentNaming（要素命名）· mapDocumentAttributeTable（属性表）· mapDocumentCrs（方案 B 坐标迁移）· mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
-        <b>shared/mapDocument/__tests__/</b><span class="chip state">98 例 · Vitest</span>
-        <small>撤销/重做 9 例 · 操作压缩 16 例 · GeoJSON 收发 21 例 · fixtures.ts 共用夹具</small>
+        <b>shared/mapDocument/__tests__/</b><span class="chip state">113 例 · Vitest</span>
+        <small>共 113 例：撤销/重做 9 · 操作压缩 16 · GeoJSON 21 · 其余为持久化/同步/命名属性表/坐标迁移 · fixtures.ts 共用夹具</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
         <b>shared/amap/</b><span class="chip state">4 个模块</span>
@@ -279,6 +279,10 @@
       <div class="box state" style="flex:1;min-width:210px">
         <b>shared/map/</b><span class="chip state">2 个模块</span>
         <small>amapFeatureAdapter（Store ↔ 覆盖物双向绑定）· useGeometryEditTarget</small>
+      </div>
+      <div class="box state" style="flex:1;min-width:210px">
+        <b>shared/geo/</b><span class="chip state">方案 B</span>
+        <small>coordTransform：GCJ-02 ↔ WGS-84 双向纯函数 · 境外直通 · 往返 1e-9°</small>
       </div>
     </div>
   </div>
@@ -362,10 +366,10 @@ flowchart TB
         subgraph CORE["状态与计算层（项目真正资产）"]
             ST1["stores/mapDocumentStore · 只做编排"]
             ST2["schemas/mapDocumentSchema · Zod 单一真相源（7 种 MapOperation）"]
-            ST3["shared/mapDocument ×14 · 撤销重做 / 操作压缩 / GeoJSON / 持久化 / 迁移 / 外部操作"]
+            ST3["shared/mapDocument ×20 · 撤销重做 / 操作压缩 / GeoJSON / 持久化 / 同步 / 坐标迁移"]
             ST4["shared/amap ×4 · loader / 绘制会话 / 编辑会话"]
-            ST5["shared/map ×2 · 要素适配器 / 几何编辑目标"]
-            T1["__tests__ · Vitest 46 例（阶段 2）"]
+            ST5["shared/map ×2 + shared/geo ×1 · 要素适配器 / 坐标转换"]
+            T1["__tests__ · Vitest 113 例"]
         end
         MAP --> ST4
         MAP --> ST5

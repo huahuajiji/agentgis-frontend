@@ -1,5 +1,6 @@
 import type { Feature as GeoJsonFeature, Position } from 'geojson';
 import { GeoJsonFeatureSchema } from '../../schemas/mapDocumentSchema';
+import { gcj02ToWgs84 } from '../geo/coordTransform';
 import type {
   AMapLngLatInstance,
   AMapOverlayInstance
@@ -107,5 +108,6 @@ function isLngLat(value: unknown): value is AMapLngLatInstance {
 }
 
 function toPosition(lngLat: AMapLngLatInstance): Position {
-  return [lngLat.getLng(), lngLat.getLat()];
+  // 方案 B：高德给的是 GCJ-02，落进文档前统一转 WGS-84。
+  return gcj02ToWgs84(lngLat.getLng(), lngLat.getLat());
 }

@@ -1,5 +1,6 @@
 import type { Feature as GeoJsonFeature } from 'geojson';
 import { GeoJsonFeatureSchema, type MapFeature } from '../../schemas/mapDocumentSchema';
+import { transformGeometry, wgs84ToGcj02 } from '../geo/coordTransform';
 import type {
   AMapMapInstance,
   AMapNamespace,
@@ -100,7 +101,8 @@ export class AmapEditSession {
   }
 
   private createOverlay(feature: MapFeature, geometry: AmapDrawGeometry) {
-    const geojsonGeometry = feature.geojson.geometry;
+    // 方案 B：文档几何是 WGS-84，高德 SDK 只认 GCJ-02，交出前统一加偏。
+    const geojsonGeometry = transformGeometry(feature.geojson.geometry, wgs84ToGcj02);
     if (geometry === 'point' && geojsonGeometry.type === 'Point') {
       return new this.AMap.Marker({
         anchor: 'bottom-center',

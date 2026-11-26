@@ -22,7 +22,9 @@ export function toRemotePayload(document: SavedMapDocument): Record<string, unkn
     updatedAt: document.updatedAt,
     viewport: document.viewport,
     layers: document.layers,
-    features: document.features
+    features: document.features,
+    // 坐标系标记随 payload 走：后端原样存，拉回时据此判断是否需要旧数据转换。
+    crs: document.crs ?? 'wgs84'
   };
 }
 
@@ -46,6 +48,7 @@ export function fromRemoteDetail(detail: RemoteDocumentDetail): SavedMapDocument
   }
 
   // 做最小形状检查；完整校验交给调用方的 Zod schema。
+  // 不在这里强塞 crs：payload 来自后端，旧文档可能没有标记（GCJ）。由拉取方统一走迁移。
   return {
     ...(raw as unknown as SavedMapDocument),
     kind: 'saved',
