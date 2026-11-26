@@ -265,12 +265,12 @@
     <p class="g-title">shared/ — 纯函数与引擎隔离（store 之下）</p>
     <div class="row">
       <div class="box state" style="flex:2;min-width:380px">
-        <b>shared/mapDocument/</b><span class="chip state">20 个模块</span>
-        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentIdb（IndexedDB）· mapDocumentRemote（HTTP）· mapDocumentSync（同步纯函数）· mapDocumentNaming（要素命名）· mapDocumentAttributeTable（属性表）· mapDocumentCrs（方案 B 坐标迁移）· mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
+        <b>shared/mapDocument/</b><span class="chip state">21 个模块</span>
+        <small>mapDocumentMutations · mapDocumentDeletion · mapDocumentGeoJson · mapDocumentUndoRedo · mapDocumentOperationApply · mapDocumentEditOperations（操作压缩）· mapDocumentCollection · mapDocumentPersistence · mapDocumentIdb（IndexedDB）· mapDocumentRemote（HTTP）· mapDocumentSync（同步纯函数）· mapDocumentNaming（要素命名）· mapDocumentAttributeTable（属性表）· mapDocumentCrs（方案 B 坐标迁移）· mapDocumentAnalysis（空间分析纯函数）· mapDocumentMigration · mapDocumentDraft/Edit/Validation · mapDocumentExternalOperations · mapDocumentConstants</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
-        <b>shared/mapDocument/__tests__/</b><span class="chip state">113 例 · Vitest</span>
-        <small>共 113 例：撤销/重做 9 · 操作压缩 16 · GeoJSON 21 · 其余为持久化/同步/命名属性表/坐标迁移 · fixtures.ts 共用夹具</small>
+        <b>shared/mapDocument/__tests__/</b><span class="chip state">124 例 · Vitest</span>
+        <small>共 124 例：撤销/重做 9 · 操作压缩 16 · GeoJSON 21 · 其余为持久化/同步/覆盖保护/命名属性表/坐标迁移/空间分析 · fixtures.ts 共用夹具</small>
       </div>
       <div class="box state" style="flex:1.2;min-width:250px">
         <b>shared/amap/</b><span class="chip state">4 个模块</span>
@@ -369,7 +369,7 @@ flowchart TB
             ST3["shared/mapDocument ×20 · 撤销重做 / 操作压缩 / GeoJSON / 持久化 / 同步 / 坐标迁移"]
             ST4["shared/amap ×4 · loader / 绘制会话 / 编辑会话"]
             ST5["shared/map ×2 + shared/geo ×1 · 要素适配器 / 坐标转换"]
-            T1["__tests__ · Vitest 113 例"]
+            T1["__tests__ · Vitest 124 例"]
         end
         MAP --> ST4
         MAP --> ST5

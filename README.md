@@ -62,7 +62,7 @@ npm run test            # 运行全部测试
 npm run typecheck:test  # 对测试文件做类型检查
 ```
 
-测试位于 `src/shared/mapDocument/__tests__/` 与 `src/shared/geo/__tests__/`，共 11 个测试文件 113 例：撤销/重做、操作压缩、GeoJSON 收发、commit 池、IndexedDB 存储与迁移、后端客户端（mock fetch）、同步纯函数、要素命名与属性表、GCJ-02 ↔ WGS-84 坐标转换与一次性迁移。
+测试位于 `src/shared/mapDocument/__tests__/` 与 `src/shared/geo/__tests__/`，共 12 个测试文件 124 例：撤销/重做、操作压缩、GeoJSON 收发、commit 池、IndexedDB 存储与迁移、后端客户端（mock fetch）、同步纯函数与拉取覆盖保护、要素命名与属性表、GCJ-02 ↔ WGS-84 坐标转换与一次性迁移、空间分析请求/结果纯函数。
 
 ## 地图 Key 配置
 
@@ -127,7 +127,7 @@ hash 模式，路径形如 `/#/map`：
 | 2a | 持久化层 localStorage → IndexedDB（idb，含旧数据迁移） | ✅ 2026-11-24 |
 | 2b | 前端手动同步后端（拉取 / 上传两个显式动作，remoteId） | ✅ 2026-11-24 |
 | 2.5 | 打包语义重构（进池不可撤销）、要素命名、浮动属性表 | ✅ 2026-11-25 |
-| 3 | 空间分析 buffer / overlay（坐标系方案 B ✅ 2026-11-26，前置剩拉取覆盖保护） | 计划 |
+| 3 | 空间分析 buffer / overlay | ✅ 2026-11-26（前置：方案 B ✅、拉取覆盖保护 ✅） |
 | 4 | 部署：前端静态托管 + 后端容器 | 计划 |
 | 5 | 演示数据与作品集截图 | 计划 |
 | 6 | （可选）自然语言 → MapOperation 的 AI 接入 | 计划 |
@@ -135,7 +135,7 @@ hash 模式，路径形如 `/#/map`：
 ## 当前限制
 
 - 浏览器本地持久化（IndexedDB）+ **手动**后端同步：待同步池面板里有「从云端拉取 / 同步到云端」两个按钮，无自动上传。后端地址由 `VITE_API_BASE_URL` 配置（默认 `http://127.0.0.1:8000`）。
-- 自动化测试目前只覆盖 `shared/mapDocument/` 与 `shared/geo/` 的核心模块（113 个用例），组件层尚未测试。
+- 自动化测试目前只覆盖 `shared/mapDocument/` 与 `shared/geo/` 的核心模块（124 个用例），组件层尚未测试。
 - **坐标系已统一（方案 B，2026-11-26）**：文档几何与 viewport 存 WGS-84，GCJ-02 只出现在高德 SDK 边界（绘制取点、渲染、编辑、viewport 读写各转一次）；旧数据在加载时一次性迁移并补 `crs: 'wgs84'` 标记。
 - 高德底图需要用户自己的 Key。
 - 已采用 MIT License。

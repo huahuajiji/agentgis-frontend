@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import AmapBaseMap from './AmapBaseMap.vue';
+import MapAnalysisDock from './MapAnalysisDock.vue';
 import MapBoundsFrame from './MapBoundsFrame.vue';
 import MapCommandBar from './MapCommandBar.vue';
 import AttributeTableFloat from '../shared/AttributeTableFloat.vue';
@@ -27,6 +28,7 @@ const mapLabel = computed(() => {
   return `当前：${mode.value}${suffix ? ` · ${suffix}` : ''}${editTarget}`;
 });
 const drawingEnabled = computed(() => mode.value === '编辑' && tool.value === '绘制');
+const analysisEnabled = computed(() => mode.value === '分析');
 </script>
 
 <template>
@@ -44,6 +46,7 @@ const drawingEnabled = computed(() => mode.value === '编辑' && tool.value === 
         :status-text="mapLabel"
       />
       <MapBoundsFrame />
+      <MapAnalysisDock v-if="analysisEnabled" />
       <AttributeTableFloat
         v-if="showAttributeTable"
         :layer="attributeTableLayer"

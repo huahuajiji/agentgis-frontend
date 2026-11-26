@@ -413,6 +413,72 @@ button:disabled {
   white-space: nowrap;
 }
 
+.map-analysis-dock {
+  position: absolute;
+  z-index: 3;
+  left: 34px;
+  bottom: 34px;
+  width: min(460px, calc(100% - 68px));
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(250, 248, 242, .94);
+  box-shadow: 0 12px 28px rgba(31, 39, 31, .12);
+}
+
+.map-analysis-row {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-analysis-mode {
+  min-width: 64px;
+}
+
+.map-analysis-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.map-analysis-input,
+.map-analysis-select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.map-analysis-input {
+  width: 90px;
+}
+
+.map-analysis-meta {
+  display: grid;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.map-analysis-meta .is-error {
+  color: #a33a2b;
+}
+
+.map-analysis-meta .is-idle {
+  color: var(--muted);
+}
+
 .map-edit-dock {
   position: absolute;
   z-index: 3;

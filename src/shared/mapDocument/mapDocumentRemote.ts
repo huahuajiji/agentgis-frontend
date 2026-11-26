@@ -30,6 +30,7 @@ export class RemoteError extends Error {
 
 const DEFAULT_BASE_URL = 'http://127.0.0.1:8000';
 const REQUEST_TIMEOUT_MS = 5000;
+const SPATIAL_TIMEOUT_MS = 15000;
 
 export function remoteBaseUrl(): string {
   const configured = import.meta.env.VITE_API_BASE_URL;
@@ -152,4 +153,23 @@ export function deleteRemoteDocument(
     ...options,
     method: 'DELETE'
   });
+}
+
+/**
+ * 空间分析（第三刀）。输入输出都是 WGS-84 的 GeoJSON 几何。
+ * 后端计算是 CPU 密集的，超时放宽到 15 秒（3857 转投影 + Shapely 运算）。
+ */
+export function runSpatialAnalysis(
+  body: Record<string, unknown>,
+  options: Pick<RequestOptions, 'fetchImpl' | 'timeoutMs'> = {}
+) {
+  return request<{ operation: string; geometry: Record<string, unknown> }>(
+    '/api/spatial/analysis',
+    {
+      ...options,
+      method: 'POST',
+      body,
+      timeoutMs: options.timeoutMs ?? SPATIAL_TIMEOUT_MS
+    }
+  );
 }

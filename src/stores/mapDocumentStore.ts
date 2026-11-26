@@ -89,6 +89,7 @@ import {
   getRemoteDocument,
   listRemoteDocuments,
   remoteHealth,
+  runSpatialAnalysis,
   updateRemoteDocument
 } from '../shared/mapDocument/mapDocumentRemote';
 import {
@@ -99,6 +100,12 @@ import {
   planPull,
   toRemotePayload
 } from '../shared/mapDocument/mapDocumentSync';
+import {
+  buildAnalysisRequest,
+  describeAnalysis,
+  toAnalysisFeature,
+  type AnalysisInput
+} from '../shared/mapDocument/mapDocumentAnalysis';
 
 export type {
   ActiveDocumentRef,
@@ -1147,6 +1154,69 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
     }
   }
 
+  // ── 第三刀：空间分析 ──────────────────────────────────────────
+  // 结果作为普通要素进新图层（还是旧图层由调用方指定），撤销/同步零改动。
+
+  const analysisStatus = ref<'idle' | 'running' | 'error'>('idle');
+  const analysisMessage = ref('');
+
+  function setAnalysisResult(status: 'idle' | 'running' | 'error', message: string) {
+    analysisStatus.value = status;
+    analysisMessage.value = message;
+  }
+
+  /**
+   * 调后端空间分析，把结果作为普通要素写进当前文档。
+   * 成功返回新要素 id；失败返回 null 并写好 analysisMessage。
+   */
+  async function runAnalysis(input: AnalysisInput, targetLayerId?: string): Promise<string | null> {
+    setAnalysisResult('running', `正在执行${describeAnalysis(input)}…`);
+
+    let feature: ReturnType<typeof toAnalysisFeature>;
+    try {
+      const body = await runSpatialAnalysis(buildAnalysisRequest(input));
+      feature = toAnalysisFeature(body, input);
+    } catch (error) {
+      setAnalysisResult('error', describeSyncError(error));
+      return null;
+    }
+
+    if (!feature) {
+      setAnalysisResult('error', '后端返回的几何无法解析');
+      return null;
+    }
+
+    // 有目标图层就进目标图层；否则新建一个结果图层。
+    let layerId = targetLayerId;
+    if (!layerId || !activeDocument.value.layers.some((layer) => layer.id === layerId)) {
+      const created = createLayer({
+        name: `${describeAnalysis(input)} 结果`,
+        role: 'work',
+        geometryType: 'polygon'
+      });
+      if (!created) {
+        setAnalysisResult('error', '无法创建结果图层');
+        return null;
+      }
+      layerId = activeDocument.value.selectedLayerId ?? undefined;
+    }
+    if (!layerId) {
+      setAnalysisResult('error', '无法确定结果图层');
+      return null;
+    }
+
+    const added = addFeature({ geojson: feature, layerId });
+    if (!added) {
+      setAnalysisResult('error', '写入分析结果失败');
+      return null;
+    }
+
+    // addFeature 会把新要素设为选中（mutations 契约）；从这里取，避免猜测 id。
+    const featureId = activeDocument.value.selectedFeatureId;
+    setAnalysisResult('idle', `${describeAnalysis(input)}完成，结果已写入图层`);
+    return featureId;
+  }
+
   function createMap(input: Omit<CreateMapInput, 'viewport'> & Partial<Pick<CreateMapInput, 'viewport'>>) {
     const result = createMapInCollection(state.value, {
       ...input,
@@ -1242,6 +1312,9 @@ export const useMapDocumentStore = defineStore('mapDocument', () => {
     initializePersistence,
     syncStatus,
     syncMessage,
+    analysisStatus,
+    analysisMessage,
+    runAnalysis,
     syncActiveDocumentToRemote,
     pullFromRemote,
     activeDocumentRef,
