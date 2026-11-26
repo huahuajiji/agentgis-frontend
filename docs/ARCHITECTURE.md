@@ -55,6 +55,15 @@
 - 图层（正式 / 参考两种 role）与图层图片资源
 - 基于 GeoJSON 的要素
 - 当前选中的图层 / 要素
+
+**要素与属性的边界（容易误解，明确写下）**：
+
+- 要素的唯一标识是 `MapFeature.id`（`feature-<uuid>`），它同时是 `document.features` 字典的 key 和图层 `featureIds` 的元素；**不依赖 properties 里的任何字段**。
+- 几何类型读 `feature.geojson.geometry.type`；属性全部在 `feature.geojson.properties`。
+- `properties` 是**自由字典，schema 不做键/类型约束**（`GeoJsonFeatureSchema` 是 `z.custom` 只校验它是合法 Feature）。不同要素可以有不同字段——属性表的"公共列"是运行时求交集，没有持久化的字段定义。
+- `properties.name` 是显示名（允许重名）；导入时没有 name 才用要素 id 兜底。手绘命名走 `mapDocumentNaming`。
+- 导入会写入两个内部记账字段：`agentgis_imported_feature_id`、`agentgis_layer_id`。
+- 后端同步以**文档级 id**（`remoteId` ↔ 后端 `doc-xxxx`）对账；要素 id / properties 只是 payload 数据，后端不解析。
 - 编辑状态：本地操作、撤销/重做栈、commit 池（待同步队列）、外部操作审核记录
 - 7 种 `MapOperation`（discriminatedUnion）：layer.create / layer.update / layer.delete、feature.create / feature.update / feature.delete、geojson.import
 
