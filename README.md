@@ -110,6 +110,13 @@ hash 模式，路径形如 `/#/map`：
     └── styles.css        全局样式（CSS 变量 + class 组织）
 ```
 
+## 部署
+
+- 前端：GitHub Pages，`https://huahuajiji.github.io/agentgis/`。push 到 `main` 自动构建
+  （`.github/workflows/deploy.yml`）。首次需在仓库 Settings → Pages 选 GitHub Actions，
+  并在 Actions Variables 里配置 `VITE_API_BASE_URL`（后端地址）。
+- 后端：Hugging Face Spaces（Docker）。步骤见后端仓库 `docs/DEPLOY.md`。
+
 ## 文档
 
 - [项目结构图](./docs/项目结构图.html)：可视化结构（浏览器打开）

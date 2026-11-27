@@ -1,0 +1,66 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Test
+        run: npm run test
+
+      - name: Typecheck
+        run: npx vue-tsc --noEmit
+
+      - name: Require backend URL
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          # 没有后端地址时构建会静默回退到 127.0.0.1:8000，线上等于坏掉。
+          # 宁可失败，也不发布一个连不上后端的演示。
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "::error::仓库变量 VITE_API_BASE_URL 未配置。Settings → Secrets and variables → Actions → Variables 添加后端地址后再重新运行。"
+            exit 1
+          fi
+
+      - name: Build
+        env:
+          # 仓库 Settings → Secrets and variables → Actions → Variables 里配置后端地址
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_BASE: /agentgis/
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
